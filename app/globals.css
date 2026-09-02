@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-blue: #05069D;
+  --accent-blue: #0F14C5;
+  --body-bg: #F6F6F6;
+  --content-gutter: clamp(1rem, 3vw, 2rem);
+}
+
+body {
+  background-color: var(--body-bg);
+  color: #050505;
+  font-family: 'Aptos', 'Helvetica Neue', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Sakana is the condensed italic display face from the reference artwork. */
+.font-display, .font-rugen, .font-sakana {
+  font-family: 'Sakana', 'Bebas Neue', 'Arial Narrow', Impact, sans-serif;
+  letter-spacing: 0;
+  font-weight: 400;
+  display: inline-block;
+  line-height: 1.08;
+  font-synthesis: none;
+  text-wrap: balance;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.16;
+}
+
+/* Diagonal Repeating Stripe Texture from asset.png */
+.bg-diagonal-pattern {
+  background-image: url('/assets/asset.png');
+  background-repeat: repeat;
+  background-size: 260px;
+}
+
+.bg-diagonal-subtle {
+  background-image: url('/assets/asset.png');
+  background-repeat: repeat;
+  background-size: 280px;
+  background-blend-mode: overlay;
+}
+
+/* Metallic gold gradient sheen for tournament pills: light -> dark -> light */
+.badge-gold {
+  background: linear-gradient(90deg, #DEBE76 0%, #8F703A 50%, #DEBE76 100%);
+  color: #050505;
+  font-family: 'Sakana', 'Arial Narrow', Impact, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: bold;
+}
+
+@keyframes intro-mark-in {
+  0% { opacity: 0; transform: scale(.72) rotate(-8deg); }
+  65% { opacity: 1; transform: scale(1.04) rotate(1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes intro-wipe {
+  0%, 72% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-100%); pointer-events: none; }
+}
+
+.intro-reveal {
+  animation: intro-wipe .85s cubic-bezier(.76, 0, .24, 1) 1.35s forwards;
+}
+
+.intro-reveal-mark {
+  animation: intro-mark-in .7s cubic-bezier(.16, 1, .3, 1) .1s both;
+}
+
+.page-reveal {
+  animation: page-reveal .55s ease-out both;
+}
+
+.section-rule {
+  position: relative;
+  padding-bottom: .7rem;
+}
+
+.section-rule::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 2.75rem;
+  height: 3px;
+  background: #DEBE76;
+}
+
+@keyframes page-reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-reveal { opacity: 0; pointer-events: none; }
+  .intro-reveal-mark, .page-reveal { animation: none; opacity: 1; transform: none; }
+}
+
+@media (max-width: 640px) {
+  .font-display, .font-rugen, .font-sakana { letter-spacing: 0; }
+
+  .page-reveal { animation-duration: .35s; }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F1F1;
+}
+::-webkit-scrollbar-thumb {
+  background: #05069D;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0F14C5;
+}
