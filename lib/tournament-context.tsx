@@ -10,7 +10,7 @@ export type PortalRole = 'captain' | 'super_admin';
 
 interface CaptainSession {
   role: PortalRole;
-  teamCode: TeamCode;
+  teamCode: TeamCode | null;
   teamId: string | null;
   name: string;
 }
@@ -109,7 +109,7 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
       setPortalRole(role);
 
       if (role === 'super_admin') {
-        setCurrentCaptain({ role, teamCode: 'AUTO', teamId: null, name: profile.full_name || 'Super Admin' });
+        setCurrentCaptain({ role, teamCode: null, teamId: null, name: profile.full_name || 'Super Admin' });
         setAuthLoading(false);
         return;
       }

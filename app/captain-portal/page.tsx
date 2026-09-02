@@ -68,6 +68,17 @@ export default function CaptainPortalPage() {
     return <div className="min-h-[60vh] flex items-center justify-center text-pl-blue font-display text-2xl uppercase tracking-wider">Verifying captain access...</div>;
   }
 
+  if (portalRole === 'super_admin') {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center">
+        <Shield className="mx-auto mb-4 h-10 w-10 text-pl-blue" />
+        <h1 className="font-display text-3xl uppercase text-pl-black">Global admin access</h1>
+        <p className="mt-2 text-sm text-gray-600">This account is not assigned to a department. Use the super-admin control room to manage the whole tournament.</p>
+        <a href="/super-admin" className="mt-6 inline-flex rounded-lg bg-pl-blue px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-pl-blue-accent">Open control room</a>
+      </div>
+    );
+  }
+
   // Middleware authenticates the request; the profile determines which team can be edited.
   if (!currentCaptain) {
     return (
