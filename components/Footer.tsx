@@ -74,7 +74,6 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} Poly League. Organized autonomously by the 8 Department Captains.</p>
           <div className="flex items-center gap-4">
             <span>Powered by Next.js & Supabase</span>
-            <span className="text-amber-300 font-bold">UCL 2-Phase Format</span>
           </div>
         </div>
       </div>

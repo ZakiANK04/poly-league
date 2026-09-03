@@ -30,6 +30,8 @@ interface TournamentContextType {
   loginAsCaptain: (teamCode: TeamCode) => void;
   logout: () => void;
   updateMatch: (matchId: string, updates: Partial<Match>) => void;
+  addMatch: (match: Omit<Match, 'id'>) => void;
+  removeMatch: (matchId: string) => void;
   addPlayer: (player: Omit<Player, 'id'>) => void;
   updatePlayer: (playerId: string, updates: Partial<Player>) => void;
   removePlayer: (playerId: string) => void;
@@ -222,6 +224,14 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     saveMatches(updated);
   };
 
+  const addMatch = (matchData: Omit<Match, 'id'>) => {
+    saveMatches([...matches, { ...matchData, id: `match-${Date.now()}` }]);
+  };
+
+  const removeMatch = (matchId: string) => {
+    saveMatches(matches.filter((match) => match.id !== matchId));
+  };
+
   const addPlayer = (playerData: Omit<Player, 'id'>) => {
     const newPlayer: Player = {
       ...playerData,
@@ -412,6 +422,8 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
         loginAsCaptain,
         logout,
         updateMatch,
+        addMatch,
+        removeMatch,
         addPlayer,
         updatePlayer,
         removePlayer,

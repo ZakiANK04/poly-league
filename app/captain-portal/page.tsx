@@ -415,7 +415,7 @@ export default function CaptainPortalPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {myMatches.map((m) => (
-              <MatchEditorCard key={m.id} match={m} onUpdate={(updates) => updateMatch(m.id, updates)} canEditScore={portalRole === 'super_admin'} />
+              <MatchEditorCard key={m.id} match={m} onUpdate={(updates) => updateMatch(m.id, updates)} canEditScore={false} />
             ))}
           </div>
         </div>

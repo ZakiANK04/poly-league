@@ -2,12 +2,12 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { Check, ClipboardCheck, Shield, Trophy, Users, X } from 'lucide-react';
+import { Check, ClipboardCheck, Plus, Shield, Trophy, Trash2, Users, X } from 'lucide-react';
 import { MatchStatus } from '@/lib/types';
 import { useTournament } from '@/lib/tournament-context';
 
 export default function SuperAdminDashboard() {
-  const { teams, players, matches, highlights, portalRole, currentCaptain, updateMatch, updateHighlight } = useTournament();
+  const { teams, players, matches, highlights, portalRole, currentCaptain, updateMatch, addMatch, removeMatch, updateHighlight } = useTournament();
   const [activeView, setActiveView] = useState<'scores' | 'squads' | 'review'>('scores');
 
   if (portalRole !== 'super_admin') {
@@ -32,7 +32,7 @@ export default function SuperAdminDashboard() {
         <AdminTab active={activeView === 'review'} onClick={() => setActiveView('review')} icon={<ClipboardCheck className="h-4 w-4" />}>Review queue ({pendingHighlights.length})</AdminTab>
       </nav>
 
-      {activeView === 'scores' && <ScoreControl matches={matches} onUpdate={updateMatch} />}
+      {activeView === 'scores' && <ScoreControl matches={matches} teams={teams} onUpdate={updateMatch} onAdd={addMatch} onRemove={removeMatch} />}
       {activeView === 'squads' && <SquadOverview teams={teams} players={players} />}
       {activeView === 'review' && <ReviewQueue highlights={highlights} onReview={(id, status) => updateHighlight(id, { approvalStatus: status, reviewedBy: currentCaptain?.name, reviewedAt: new Date().toISOString() })} />}
     </div>
@@ -43,17 +43,22 @@ function AdminTab({ active, onClick, icon, children }: { active: boolean; onClic
   return <button onClick={onClick} className={`flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-xs font-bold uppercase tracking-wide transition ${active ? 'border-pl-blue text-pl-blue' : 'border-transparent text-gray-400 hover:text-gray-900'}`}>{icon}{children}</button>;
 }
 
-function ScoreControl({ matches, onUpdate }: { matches: ReturnType<typeof useTournament>['matches']; onUpdate: (id: string, updates: Parameters<ReturnType<typeof useTournament>['updateMatch']>[1]) => void }) {
-  return <section className="grid gap-4 md:grid-cols-2">{matches.map((match) => <ScoreCard key={match.id} match={match} onUpdate={(updates) => onUpdate(match.id, updates)} />)}</section>;
+function ScoreControl({ matches, teams, onUpdate, onAdd, onRemove }: { matches: ReturnType<typeof useTournament>['matches']; teams: ReturnType<typeof useTournament>['teams']; onUpdate: (id: string, updates: Parameters<ReturnType<typeof useTournament>['updateMatch']>[1]) => void; onAdd: ReturnType<typeof useTournament>['addMatch']; onRemove: ReturnType<typeof useTournament>['removeMatch'] }) {
+  const addBlankMatch = () => {
+    const homeTeam = teams[0];
+    const awayTeam = teams[1];
+    onAdd({ phase: 'league', matchday: 1, roundLabel: 'Matchday 1', homeTeamId: homeTeam.id, awayTeamId: awayTeam.id, homeTeam, awayTeam, scheduledAt: '', venue: '', homeScore: null, awayScore: null, status: 'scheduled' });
+  };
+  return <section className="space-y-4"><div className="flex items-center justify-between gap-3"><div><h2 className="font-display text-2xl uppercase">Match CRUD</h2><p className="text-xs text-gray-500">Create, edit, score, or remove any fixture.</p></div><button onClick={addBlankMatch} className="flex items-center gap-1 rounded-md bg-pl-blue px-3 py-2 text-xs font-bold uppercase text-white hover:bg-pl-blue-accent"><Plus className="h-4 w-4" /> New match</button></div><div className="grid gap-4 md:grid-cols-2">{matches.map((match) => <ScoreCard key={match.id} match={match} onUpdate={(updates) => onUpdate(match.id, updates)} onRemove={() => onRemove(match.id)} />)}</div></section>;
 }
 
-function ScoreCard({ match, onUpdate }: { match: ReturnType<typeof useTournament>['matches'][number]; onUpdate: (updates: Parameters<ReturnType<typeof useTournament>['updateMatch']>[1]) => void }) {
+function ScoreCard({ match, onUpdate, onRemove }: { match: ReturnType<typeof useTournament>['matches'][number]; onUpdate: (updates: Parameters<ReturnType<typeof useTournament>['updateMatch']>[1]) => void; onRemove: () => void }) {
   const [homeScore, setHomeScore] = useState(match.homeScore ?? 0);
   const [awayScore, setAwayScore] = useState(match.awayScore ?? 0);
   const [status, setStatus] = useState<MatchStatus>(match.status);
   const [saved, setSaved] = useState(false);
   const save = () => { onUpdate({ homeScore: status === 'scheduled' ? null : homeScore, awayScore: status === 'scheduled' ? null : awayScore, status }); setSaved(true); window.setTimeout(() => setSaved(false), 1800); };
-  return <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"><div className="mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-pl-blue"><span>{match.roundLabel || `Matchday ${match.matchday}`}</span><span className="text-gray-400">{match.venue || 'Venue TBD'}</span></div><div className="flex items-center justify-between gap-2"><div className="flex min-w-0 flex-1 items-center gap-2"><div className="relative h-9 w-9 shrink-0"><Image src={match.homeTeam.badgeUrl} alt="" fill className="object-contain" /></div><span className="font-display text-xl">{match.homeTeam.code}</span></div><div className="flex items-center gap-1"><input aria-label={`${match.homeTeam.code} score`} type="number" min="0" value={homeScore} onChange={(event) => setHomeScore(Number(event.target.value))} className="w-11 rounded-md border px-1 py-1 text-center font-display text-xl" disabled={status === 'scheduled'} /><span className="font-display text-lg text-gray-400">:</span><input aria-label={`${match.awayTeam.code} score`} type="number" min="0" value={awayScore} onChange={(event) => setAwayScore(Number(event.target.value))} className="w-11 rounded-md border px-1 py-1 text-center font-display text-xl" disabled={status === 'scheduled'} /></div><div className="flex min-w-0 flex-1 items-center justify-end gap-2"><span className="font-display text-xl">{match.awayTeam.code}</span><div className="relative h-9 w-9 shrink-0"><Image src={match.awayTeam.badgeUrl} alt="" fill className="object-contain" /></div></div></div><div className="mt-4 grid grid-cols-[1fr_auto] gap-2"><select value={status} onChange={(event) => setStatus(event.target.value as MatchStatus)} className="rounded-md border px-2 py-2 text-xs font-semibold"><option value="scheduled">Scheduled</option><option value="live">Live</option><option value="finished">Finished</option></select><button onClick={save} className={`flex items-center justify-center gap-1 rounded-md px-3 py-2 text-xs font-bold uppercase ${saved ? 'bg-emerald-600 text-white' : 'bg-pl-blue text-white hover:bg-pl-blue-accent'}`}>{saved ? <Check className="h-4 w-4" /> : <Trophy className="h-4 w-4" />} {saved ? 'Saved' : 'Save score'}</button></div></article>;
+  return <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"><div className="mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-pl-blue"><span>{match.roundLabel || `Matchday ${match.matchday}`}</span><button onClick={onRemove} className="text-red-600 hover:text-red-800" aria-label={`Delete ${match.homeTeam.code} versus ${match.awayTeam.code}`}><Trash2 className="h-4 w-4" /></button></div><div className="flex items-center justify-between gap-2"><div className="flex min-w-0 flex-1 items-center gap-2"><div className="relative h-9 w-9 shrink-0"><Image src={match.homeTeam.badgeUrl} alt="" fill className="object-contain" /></div><span className="font-display text-xl">{match.homeTeam.code}</span></div><div className="flex items-center gap-1"><input aria-label={`${match.homeTeam.code} score`} type="number" min="0" value={homeScore} onChange={(event) => setHomeScore(Number(event.target.value))} className="w-11 rounded-md border px-1 py-1 text-center font-display text-xl" disabled={status === 'scheduled'} /><span className="font-display text-lg text-gray-400">:</span><input aria-label={`${match.awayTeam.code} score`} type="number" min="0" value={awayScore} onChange={(event) => setAwayScore(Number(event.target.value))} className="w-11 rounded-md border px-1 py-1 text-center font-display text-xl" disabled={status === 'scheduled'} /></div><div className="flex min-w-0 flex-1 items-center justify-end gap-2"><span className="font-display text-xl">{match.awayTeam.code}</span><div className="relative h-9 w-9 shrink-0"><Image src={match.awayTeam.badgeUrl} alt="" fill className="object-contain" /></div></div></div><div className="mt-4 grid grid-cols-[1fr_auto] gap-2"><select value={status} onChange={(event) => setStatus(event.target.value as MatchStatus)} className="rounded-md border px-2 py-2 text-xs font-semibold"><option value="scheduled">Scheduled</option><option value="live">Live</option><option value="finished">Finished</option></select><button onClick={save} className={`flex items-center justify-center gap-1 rounded-md px-3 py-2 text-xs font-bold uppercase ${saved ? 'bg-emerald-600 text-white' : 'bg-pl-blue text-white hover:bg-pl-blue-accent'}`}>{saved ? <Check className="h-4 w-4" /> : <Trophy className="h-4 w-4" />} {saved ? 'Saved' : 'Save score'}</button></div></article>;
 }
 
 function SquadOverview({ teams, players }: { teams: ReturnType<typeof useTournament>['teams']; players: ReturnType<typeof useTournament>['players'] }) {

@@ -23,9 +23,16 @@ export default function StandingsTable({ compact = false }: { compact?: boolean 
     <div className="space-y-4">
       {/* Desktop & Tablet Table */}
       <div className="hidden sm:block overflow-x-auto bg-white rounded-2xl shadow-lg border border-gray-200">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full table-fixed text-left border-collapse">
+          <colgroup>
+            <col className="w-14" />
+            <col />
+            <col className="w-16" />
+            {!compact && <><col className="w-14" /><col className="w-14" /><col className="w-14" /></>}
+            <col className="w-16" /><col className="w-16" /><col className="w-16" /><col className="w-20" />
+          </colgroup>
           <thead>
-            <tr className="bg-pl-blue text-white text-xs uppercase tracking-wider font-display border-b-2 border-pl-blue-accent">
+            <tr className="bg-pl-blue text-white text-xs uppercase tracking-wider border-b-2 border-pl-blue-accent">
               <th className="py-4 px-4 text-center w-12 text-sm">#</th>
               <th className="py-4 px-4 text-sm">Team Department</th>
               <th className="py-4 px-3 text-center text-sm">MP</th>
@@ -39,7 +46,7 @@ export default function StandingsTable({ compact = false }: { compact?: boolean 
               <th className="py-4 px-3 text-center text-sm">GF</th>
               <th className="py-4 px-3 text-center text-sm">GA</th>
               <th className="py-4 px-3 text-center text-sm">GD</th>
-              <th className="py-4 px-5 text-center font-bold text-amber-300 text-base">PTS</th>
+              <th className="py-4 px-3 text-center font-bold text-amber-300 text-base">PTS</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm font-medium">
@@ -117,7 +124,7 @@ export default function StandingsTable({ compact = false }: { compact?: boolean 
                 </td>
 
                 {/* Points: Bold Blue */}
-                <td className="py-3.5 px-5 text-center font-display text-2xl text-pl-blue-accent font-bold">
+                <td className="py-3.5 px-3 text-center font-display text-2xl text-pl-blue-accent font-bold">
                   {row.points}
                 </td>
               </motion.tr>

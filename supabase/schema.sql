@@ -127,6 +127,10 @@ $$;
 
 create policy "Allow super admins to update any match" on matches
   for update using (public.is_super_admin()) with check (public.is_super_admin());
+create policy "Allow super admins to insert matches" on matches
+  for insert with check (public.is_super_admin());
+create policy "Allow super admins to delete matches" on matches
+  for delete using (public.is_super_admin());
 
 create policy "Allow captains to submit highlights" on highlights
   for insert with check (auth.uid() is not null and approval_status = 'pending');

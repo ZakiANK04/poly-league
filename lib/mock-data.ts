@@ -379,6 +379,42 @@ export const ANNOUNCEMENTS: AnnouncementSlide[] = [
 
 export const HIGHLIGHTS: HighlightItem[] = [
   {
+    id: 'hl-polyback',
+    season: '2026 Launch',
+    title: 'A New Format. A Bigger Fight.',
+    description: 'Poly League returns with a new two-phase format built for more tension, more turning points, and one unforgettable champion.',
+    mediaUrl: '/assets/editorial/polyback.jpeg',
+    mediaType: 'image',
+    tags: ['Return', 'New Format', 'Season 2026'],
+  },
+  {
+    id: 'hl-indus-malik',
+    season: '2025 Edition',
+    title: 'Hammada Masterclass Seals the Comeback',
+    description: 'INDUS turned a thriller against DATA on its head with a late comeback, driven by a decisive Hammada masterclass.',
+    mediaUrl: '/assets/editorial/indus-malik.jpg',
+    mediaType: 'image',
+    tags: ['INDUS', 'Comeback', 'Matchday'],
+  },
+  {
+    id: 'hl-data-zaki',
+    season: '2025 Edition',
+    title: 'DATA Hold the Line and Break Through',
+    description: 'Captain Zaki celebrates with the DATA supporters after defensive heroics carried the department into the knockout phase.',
+    mediaUrl: '/assets/editorial/data-zaki.jpeg',
+    mediaType: 'image',
+    tags: ['DATA', 'Knockouts', 'Defensive Wall'],
+  },
+  {
+    id: 'hl-eln-mouici',
+    season: '2025 Edition',
+    title: 'Mouici Keeps ELN Hungry',
+    description: 'After the 5–2 loss to QHSE, ELN center back Mouici gathered the team, praised its resilience, and pointed toward this season’s fight.',
+    mediaUrl: '/assets/editorial/eln-mouici.jpeg',
+    mediaType: 'image',
+    tags: ['ELN', 'Resilience', 'Captaincy'],
+  },
+  {
     id: 'hl-1',
     season: '2025 Edition',
     title: 'Grand Final Thriller: MECA vs ELT',

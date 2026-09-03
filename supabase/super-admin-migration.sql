@@ -52,6 +52,22 @@ drop trigger if exists protect_match_scoreline on public.matches;
 create trigger protect_match_scoreline before update on public.matches
 for each row execute function public.protect_match_scoreline();
 
+drop policy if exists "Allow super admins to insert matches" on public.matches;
+create policy "Allow super admins to insert matches" on public.matches
+  for insert with check (public.is_super_admin());
+drop policy if exists "Allow super admins to update any match" on public.matches;
+create policy "Allow super admins to update any match" on public.matches
+  for update using (public.is_super_admin()) with check (public.is_super_admin());
+drop policy if exists "Allow super admins to delete matches" on public.matches;
+create policy "Allow super admins to delete matches" on public.matches
+  for delete using (public.is_super_admin());
+
+-- After creating Mouici in Authentication > Users, replace the UUID below and run once.
+-- A super admin is global and intentionally has no team assignment.
+-- update public.profiles
+-- set role = 'super_admin', team_id = null, full_name = 'Mouici'
+-- where id = 'MOUICI_AUTH_USER_UUID';
+
 -- Replace this UUID with the Auth user UUID of the one super admin.
 -- update public.profiles set role = 'super_admin', team_id = null
 -- where id = 'SUPER_ADMIN_AUTH_USER_UUID';

@@ -46,7 +46,7 @@ export default function Navbar() {
                 POLY LEAGUE
               </span>
               <span className="text-[6px] sm:text-[7px] text-amber-300 uppercase tracking-[.14em] font-bold mt-1">
-                Official Tournament
+                Competition of the elites
               </span>
             </div>
           </Link>
