@@ -38,7 +38,7 @@ export default function HeroBanner() {
           >
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-xs font-bold uppercase tracking-wider text-amber-300">
               <Trophy className="w-4 h-4 text-amber-300" />
-              <span>Official Tournament Portal — Season 2026</span>
+              <span className="font-sakana text-[10px] tracking-[.08em]">Official Tournament Portal — Season 2026</span>
             </div>
 
             <div className="space-y-3">

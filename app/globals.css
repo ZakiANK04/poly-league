@@ -33,7 +33,16 @@ body {
   overflow-x: hidden;
 }
 
-.font-display, .font-rugen, .font-sakana {
+.font-display, .font-rugen {
+  font-family: 'Inter', 'Helvetica Neue', 'Segoe UI', sans-serif;
+  letter-spacing: -.02em;
+  font-weight: 800;
+  display: inline-block;
+  line-height: 1.05;
+  font-synthesis: none;
+  text-wrap: balance;
+}
+.font-sakana {
   font-family: 'Sakana', 'Arial Narrow', Impact, sans-serif;
   letter-spacing: .01em;
   font-weight: 400;

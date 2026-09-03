@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Team, Match, Player, StandingRow, TeamCode, KnockoutDrawState, HighlightItem, MatchScorer, MatchPeriod } from './types';
-import { TEAMS, INITIAL_MATCHES, INITIAL_PLAYERS, HIGHLIGHTS } from './mock-data';
+import { TEAMS, INITIAL_MATCHES, INITIAL_PLAYERS } from './mock-data';
 import { calculateStandings } from './standings';
 import { createClient } from './supabase/client';
 
@@ -142,7 +142,7 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   const [teams, setTeams] = useState<Team[]>(TEAMS);
   const [matches, setMatches] = useState<Match[]>(INITIAL_MATCHES);
   const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS);
-  const [highlights, setHighlights] = useState<HighlightItem[]>(HIGHLIGHTS);
+  const [highlights, setHighlights] = useState<HighlightItem[]>([]);
   const [currentCaptain, setCurrentCaptain] = useState<CaptainSession | null>(null);
   const [portalRole, setPortalRole] = useState<PortalRole | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -482,7 +482,11 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const standings = calculateStandings(teams, matches);
-  const publishedHighlights = highlights.filter((highlight) => (highlight.approvalStatus || 'approved') === 'approved');
+  const publishedHighlights = highlights.filter((highlight) => {
+    const title = highlight.title.trim().toLowerCase();
+    const placeholder = title === 'games draw soon' || title === 'a new format. a bigger fight.';
+    return (highlight.approvalStatus || 'approved') === 'approved' && !placeholder;
+  });
 
   // Autonomous Knockout Random Draw function
   const conductKnockoutDraw = (captainName: string) => {
@@ -613,7 +617,7 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   const resetToDefaults = () => {
     setMatches(INITIAL_MATCHES);
     setPlayers(INITIAL_PLAYERS);
-    setHighlights(HIGHLIGHTS);
+    setHighlights([]);
     setKnockoutDraw({ isDrawn: false });
     try {
       localStorage.removeItem(STORAGE_KEY_MATCHES);
