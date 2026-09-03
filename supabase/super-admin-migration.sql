@@ -16,6 +16,10 @@ alter table public.highlights alter column approval_status set default 'pending'
 alter table public.highlights add column if not exists created_by uuid references auth.users(id);
 alter table public.highlights add column if not exists reviewed_by uuid references auth.users(id);
 alter table public.highlights add column if not exists reviewed_at timestamptz;
+alter table public.matches add column if not exists match_period text
+  check (match_period in ('pre-match', 'first-half', 'second-half', 'full-time'))
+  default 'pre-match';
+alter table public.matches add column if not exists scorers jsonb not null default '[]'::jsonb;
 
 create or replace function public.is_super_admin()
 returns boolean language sql stable security definer set search_path = public as $$
@@ -60,6 +64,16 @@ create policy "Allow super admins to update any match" on public.matches
   for update using (public.is_super_admin()) with check (public.is_super_admin());
 drop policy if exists "Allow super admins to delete matches" on public.matches;
 create policy "Allow super admins to delete matches" on public.matches
+  for delete using (public.is_super_admin());
+
+drop policy if exists "Allow super admins to insert players" on public.players;
+create policy "Allow super admins to insert players" on public.players
+  for insert with check (public.is_super_admin());
+drop policy if exists "Allow super admins to update players" on public.players;
+create policy "Allow super admins to update players" on public.players
+  for update using (public.is_super_admin()) with check (public.is_super_admin());
+drop policy if exists "Allow super admins to delete players" on public.players;
+create policy "Allow super admins to delete players" on public.players
   for delete using (public.is_super_admin());
 
 -- After creating Mouici in Authentication > Users, replace the UUID below and run once.

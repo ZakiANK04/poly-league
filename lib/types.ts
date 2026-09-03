@@ -30,6 +30,14 @@ export interface Player {
 
 export type MatchPhase = 'league' | 'playoff' | 'semifinal' | 'final';
 export type MatchStatus = 'scheduled' | 'live' | 'finished';
+export type MatchPeriod = 'pre-match' | 'first-half' | 'second-half' | 'full-time';
+
+export interface MatchScorer {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  minute?: number;
+}
 
 export interface Match {
   id: string;
@@ -45,6 +53,8 @@ export interface Match {
   homeScore?: number | null;
   awayScore?: number | null;
   status: MatchStatus;
+  matchPeriod?: MatchPeriod;
+  scorers?: MatchScorer[];
   lastUpdatedBy?: string;
 }
 

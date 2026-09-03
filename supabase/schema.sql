@@ -48,6 +48,8 @@ create table if not exists matches (
   home_score int,
   away_score int,
   status text check (status in ('scheduled','live','finished')) default 'scheduled',
+  match_period text check (match_period in ('pre-match','first-half','second-half','full-time')) default 'pre-match',
+  scorers jsonb not null default '[]'::jsonb,
   last_updated_by text,
   updated_at timestamptz default now(),
   created_at timestamptz default now()
@@ -130,6 +132,12 @@ create policy "Allow super admins to update any match" on matches
 create policy "Allow super admins to insert matches" on matches
   for insert with check (public.is_super_admin());
 create policy "Allow super admins to delete matches" on matches
+  for delete using (public.is_super_admin());
+create policy "Allow super admins to insert players" on players
+  for insert with check (public.is_super_admin());
+create policy "Allow super admins to update players" on players
+  for update using (public.is_super_admin()) with check (public.is_super_admin());
+create policy "Allow super admins to delete players" on players
   for delete using (public.is_super_admin());
 
 create policy "Allow captains to submit highlights" on highlights
