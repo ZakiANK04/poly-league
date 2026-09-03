@@ -36,6 +36,7 @@ interface TournamentContextType {
   updatePlayer: (playerId: string, updates: Partial<Player>) => void;
   removePlayer: (playerId: string) => void;
   addHighlight: (highlight: Omit<HighlightItem, 'id'>) => void;
+  addApprovedHighlight: (highlight: Omit<HighlightItem, 'id'>) => void;
   updateHighlight: (highlightId: string, updates: Partial<HighlightItem>) => void;
   removeHighlight: (highlightId: string) => void;
   conductKnockoutDraw: (captainName: string) => void;
@@ -255,6 +256,10 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     saveHighlights([{ ...highlight, id: `highlight-${Date.now()}`, approvalStatus: 'pending' }, ...highlights]);
   };
 
+  const addApprovedHighlight = (highlight: Omit<HighlightItem, 'id'>) => {
+    saveHighlights([{ ...highlight, id: `highlight-${Date.now()}`, approvalStatus: 'approved' }, ...highlights]);
+  };
+
   const updateHighlight = (highlightId: string, updates: Partial<HighlightItem>) => {
     saveHighlights(highlights.map((highlight) => highlight.id === highlightId ? { ...highlight, ...updates } : highlight));
   };
@@ -428,6 +433,7 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
         updatePlayer,
         removePlayer,
         addHighlight,
+        addApprovedHighlight,
         updateHighlight,
         removeHighlight,
         conductKnockoutDraw,

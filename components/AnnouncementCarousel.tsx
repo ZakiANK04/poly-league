@@ -5,26 +5,33 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Bell } from 'lucide-react';
 import { ANNOUNCEMENTS } from '@/lib/mock-data';
+import { useTournament } from '@/lib/tournament-context';
 
 export default function AnnouncementCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { publishedHighlights, matches } = useTournament();
+  const dynamicSlides = [
+    ...publishedHighlights.slice(0, 3).map((item) => ({ id: item.id, tag: 'LATEST HIGHLIGHT', title: item.title, subtitle: item.season, content: item.caption || item.description, date: 'Published update' })),
+    ...matches.filter((match) => match.status === 'live' || match.status === 'finished').slice(0, 2).map((match) => ({ id: `match-${match.id}`, tag: 'MATCH UPDATE', title: `${match.homeTeam.code} ${match.homeScore ?? '-'} — ${match.awayScore ?? '-'} ${match.awayTeam.code}`, subtitle: match.roundLabel || 'Match update', content: `The latest official result is now available in Fixtures and Standings.`, date: 'Live tournament data' })),
+  ];
+  const slides = [...dynamicSlides, ...ANNOUNCEMENTS];
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev === 0 ? ANNOUNCEMENTS.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
   };
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev === ANNOUNCEMENTS.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
   };
 
   useEffect(() => {
     const timer = setInterval(() => {
-      nextSlide();
+      setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
     }, 9000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
-  const slide = ANNOUNCEMENTS[currentIndex];
+  const slide = slides[currentIndex] || ANNOUNCEMENTS[0];
 
   return (
     <section className="max-w-4xl mx-auto px-4 py-12">
@@ -109,7 +116,7 @@ export default function AnnouncementCarousel() {
 
         {/* Dot Pagination */}
         <div className="bg-white py-3 border-t border-gray-100 flex items-center justify-center gap-2">
-          {ANNOUNCEMENTS.map((_, idx) => (
+          {slides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}

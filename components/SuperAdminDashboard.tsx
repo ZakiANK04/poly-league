@@ -2,12 +2,12 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { Check, ClipboardCheck, Plus, Shield, Trophy, Trash2, Users, X } from 'lucide-react';
+import { Check, ClipboardCheck, FilePlus2, Plus, Shield, Trophy, Trash2, Users, X } from 'lucide-react';
 import { MatchPeriod, MatchStatus, MatchScorer, Player } from '@/lib/types';
 import { useTournament } from '@/lib/tournament-context';
 
 export default function SuperAdminDashboard() {
-  const { teams, players, matches, highlights, portalRole, currentCaptain, updateMatch, addMatch, removeMatch, addPlayer, updatePlayer, removePlayer, updateHighlight } = useTournament();
+  const { teams, players, matches, highlights, portalRole, currentCaptain, updateMatch, addMatch, removeMatch, addPlayer, updatePlayer, removePlayer, addApprovedHighlight, updateHighlight } = useTournament();
   const [activeView, setActiveView] = useState<'scores' | 'squads' | 'review'>('scores');
 
   if (portalRole !== 'super_admin') {
@@ -34,7 +34,7 @@ export default function SuperAdminDashboard() {
 
       {activeView === 'scores' && <MatchManager matches={matches} teams={teams} players={players} onUpdate={updateMatch} onAdd={addMatch} onRemove={removeMatch} />}
       {activeView === 'squads' && <SquadOverview teams={teams} players={players} onAdd={addPlayer} onUpdate={updatePlayer} onRemove={removePlayer} />}
-      {activeView === 'review' && <ReviewQueue highlights={highlights} onReview={(id, status) => updateHighlight(id, { approvalStatus: status, reviewedBy: currentCaptain?.name, reviewedAt: new Date().toISOString() })} />}
+      {activeView === 'review' && <div className="space-y-5"><PublishNews onPublish={addApprovedHighlight} /><ReviewQueue highlights={highlights} onReview={(id, status) => updateHighlight(id, { approvalStatus: status, reviewedBy: currentCaptain?.name, reviewedAt: new Date().toISOString() })} /></div>}
     </div>
   );
 }
@@ -79,4 +79,13 @@ function ReviewQueue({ highlights, onReview }: { highlights: ReturnType<typeof u
   const pending = highlights.filter((item) => (item.approvalStatus || 'approved') === 'pending');
   if (!pending.length) return <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center"><ClipboardCheck className="mx-auto h-8 w-8 text-emerald-600" /><h2 className="mt-3 font-display text-2xl uppercase">Queue is clear</h2><p className="mt-1 text-sm text-gray-500">New admin submissions will appear here for review.</p></div>;
   return <section className="space-y-3">{pending.map((item) => <article key={item.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"><div className="flex flex-col gap-4 sm:flex-row sm:items-center"><div className="flex-1"><p className="text-[10px] font-bold uppercase tracking-wider text-pl-blue">{item.contentType || 'article'} · Submitted by {item.createdBy || 'captain'}</p><h2 className="mt-1 font-display text-2xl uppercase">{item.title}</h2><p className="mt-1 text-sm text-gray-600">{item.caption || item.description}</p></div><div className="flex shrink-0 gap-2"><button onClick={() => onReview(item.id, 'rejected')} className="flex items-center gap-1 rounded-md border border-red-200 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> Reject</button><button onClick={() => onReview(item.id, 'approved')} className="flex items-center gap-1 rounded-md bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700"><Check className="h-4 w-4" /> Approve</button></div></div></article>)}</section>;
+}
+
+function PublishNews({ onPublish }: { onPublish: (news: { season: string; title: string; description: string; caption: string; mediaUrl: string; mediaType: 'image'; tags: string[]; contentType: 'article'; createdBy?: string }) => void }) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('/assets/Logo_polyleague.png');
+  const [saved, setSaved] = useState(false);
+  const publish = () => { if (!title.trim() || !description.trim()) return; onPublish({ season: 'Season 2026', title: title.trim(), description: description.trim(), caption: description.trim(), mediaUrl: mediaUrl.trim() || '/assets/Logo_polyleague.png', mediaType: 'image', tags: ['Official', 'Super Admin'], contentType: 'article' }); setTitle(''); setDescription(''); setSaved(true); window.setTimeout(() => setSaved(false), 1800); };
+  return <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="flex items-center gap-2"><FilePlus2 className="h-4 w-4 text-pl-blue" /><h2 className="font-display text-2xl uppercase text-pl-blue">Publish News</h2></div><p className="mt-1 text-xs text-gray-600">Super-admin stories appear immediately in Highlights and the official announcement card.</p><div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1.4fr_1fr_auto]"><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Headline" className="rounded-md border px-3 py-2 text-xs" /><input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Short story description" className="rounded-md border px-3 py-2 text-xs" /><input value={mediaUrl} onChange={(event) => setMediaUrl(event.target.value)} placeholder="Image URL or /assets/..." className="rounded-md border px-3 py-2 text-xs" /><button onClick={publish} className="flex items-center justify-center gap-1 rounded-md bg-pl-blue px-3 py-2 text-xs font-bold uppercase text-white hover:bg-pl-blue-accent"><Plus className="h-4 w-4" /> {saved ? 'Published' : 'Publish'}</button></div></div>;
 }
