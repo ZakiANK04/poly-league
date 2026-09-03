@@ -184,8 +184,19 @@ create trigger protect_match_scoreline
 before update on matches
 for each row execute function public.protect_match_scoreline();
 
--- Enable Realtime for matches table
-alter publication supabase_realtime add table matches;
+-- Enable Realtime for every synchronized table without failing on reruns.
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'matches') then
+    alter publication supabase_realtime add table public.matches;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'players') then
+    alter publication supabase_realtime add table public.players;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'highlights') then
+    alter publication supabase_realtime add table public.highlights;
+  end if;
+end $$;
 
 -- ==========================================
 -- SEED DATA
