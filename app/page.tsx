@@ -4,147 +4,60 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Trophy, Calendar, Users, ArrowRight } from 'lucide-react';
-import HeroBanner from '@/components/HeroBanner';
+import { ArrowRight, CalendarDays, ChevronRight, CircleDot, Radio, Shield, Trophy, Users } from 'lucide-react';
 import AnnouncementCarousel from '@/components/AnnouncementCarousel';
-import StandingsTable from '@/components/StandingsTable';
 import FixtureCard from '@/components/FixtureCard';
 import { useTournament } from '@/lib/tournament-context';
-import { CircleHelp, Smartphone, Sparkles } from 'lucide-react';
+
+function SectionLabel({ children, icon: Icon = CircleDot }: { children: React.ReactNode; icon?: React.ElementType }) {
+  return <div className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-pl-blue-accent"><Icon className="h-3.5 w-3.5" />{children}</div>;
+}
 
 export default function HomePage() {
-  const { matches, teams } = useTournament();
+  const { teams, matches, standings, publishedHighlights } = useTournament();
+  const liveMatches = matches.filter((match) => match.status === 'live');
+  const upcoming = matches.filter((match) => match.status === 'scheduled').slice(0, 2);
+  const recent = matches.filter((match) => match.status === 'finished').slice(-2).reverse();
+  const featuredMatches = upcoming.length ? upcoming : [...liveMatches, ...recent];
+  const completed = matches.filter((match) => match.status === 'finished').length;
+  const leader = standings[0];
 
-  const recentOrLive = matches.filter((m) => m.status === 'live' || m.status === 'finished').slice(-4).reverse();
-  const upcoming = matches.filter((m) => m.status === 'scheduled').slice(0, 4);
+  return <div className="page-reveal overflow-hidden pb-16">
+    <section className="relative isolate min-h-[min(760px,calc(100vh-68px))] overflow-hidden bg-pl-blue text-white">
+      <Image src="/assets/editorial/polyback.jpeg" alt="" fill priority className="object-cover object-center opacity-20 mix-blend-screen" />
+      <div className="absolute inset-0 bg-[linear-gradient(110deg,#05069D_0%,rgba(5,6,157,.94)_45%,rgba(5,6,157,.55)_100%)]" />
+      <div className="absolute inset-0 bg-diagonal-pattern opacity-10" />
+      <div className="absolute -right-32 top-20 h-[28rem] w-[28rem] rounded-full border border-white/10 sm:h-[42rem] sm:w-[42rem]" />
+      <div className="absolute -right-16 top-44 h-[20rem] w-[20rem] rounded-full border border-amber-300/20 sm:h-[30rem] sm:w-[30rem]" />
+      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.1fr_.9fr] lg:px-8 lg:py-28">
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .55 }} className="max-w-3xl">
+          <div className="mb-7 flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[.2em] text-amber-300"><span className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-black/10 px-3 py-2"><Trophy className="h-3.5 w-3.5" /> Official tournament portal</span><span className="text-white/60">Season 2026</span></div>
+          <h1 className="font-display text-[clamp(4.6rem,13vw,10rem)] uppercase leading-[.78] tracking-[-.025em] text-white"><span className="block">POLY</span><span className="ml-[.12em] block text-amber-300">LEAGUE</span></h1>
+          <div className="mt-8 flex items-start gap-4"><div className="mt-1 h-12 w-1 shrink-0 bg-amber-300" /><div><p className="font-display text-2xl uppercase leading-none tracking-wide sm:text-4xl">Eight departments.<br /><span className="text-white/60">One road to glory.</span></p><p className="mt-5 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">A student-run football championship where engineering departments meet under the lights, compete across four matchdays, and chase the final.</p></div></div>
+          <div className="mt-9 flex flex-wrap gap-3"><Link href="/fixtures" className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-amber-300 px-5 py-3 font-display text-lg uppercase tracking-wide text-pl-black shadow-xl transition hover:bg-amber-200">Follow matchday <ArrowRight className="h-4 w-4" /></Link><Link href="/rules" className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-white/25 bg-white/5 px-5 py-3 font-display text-lg uppercase tracking-wide text-white transition hover:bg-white/15">How it works</Link></div>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .6, delay: .1 }} className="relative lg:justify-self-end">
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-[#030477]/70 p-5 shadow-2xl backdrop-blur-sm sm:p-7 lg:w-[27rem]"><div className="mb-8 flex items-center justify-between border-b border-white/15 pb-4"><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"><span className={`h-2.5 w-2.5 rounded-full ${liveMatches.length ? 'animate-pulse bg-red-400' : 'bg-amber-300'}`} />{liveMatches.length ? 'Live on the pitch' : 'Pre-season status'}</div><span className="text-[10px] uppercase tracking-[.18em] text-white/50">PL / 26</span></div><div className="flex items-center justify-center py-3"><div className="relative h-40 w-40 sm:h-48 sm:w-48"><div className="absolute inset-0 rounded-full border border-dashed border-amber-300/40" /><div className="absolute inset-5 rounded-full border border-white/15" /><Image src="/assets/Logo_polyleague.png" alt="Poly League crest" fill className="object-contain p-12 sm:p-14" /></div></div><div className="mt-8 border-t border-white/15 pt-5"><div className="flex items-end justify-between gap-5"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-amber-300">Next milestone</p><p className="mt-1 font-display text-3xl uppercase">Official draw</p></div><span className="rounded-full border border-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/70">Awaiting captains</span></div><p className="mt-3 text-xs leading-relaxed text-white/60">The first fixtures appear here as soon as the department captains publish the draw.</p></div></div>
+        </motion.div>
+      </div>
+      <div className="relative mx-auto grid max-w-7xl grid-cols-2 border-t border-white/15 px-4 sm:grid-cols-4 sm:px-6 lg:px-8"><div className="border-r border-white/15 py-5 pr-4"><p className="font-display text-3xl text-amber-300">08</p><p className="text-[9px] font-bold uppercase tracking-[.16em] text-white/55">Departments</p></div><div className="border-r border-white/15 py-5 pl-4 sm:pl-5"><p className="font-display text-3xl text-amber-300">02</p><p className="text-[9px] font-bold uppercase tracking-[.16em] text-white/55">Competition phases</p></div><div className="border-r border-white/15 py-5 pr-4 pl-4 sm:pl-5"><p className="font-display text-3xl text-amber-300">04</p><p className="text-[9px] font-bold uppercase tracking-[.16em] text-white/55">League matchdays</p></div><div className="py-5 pl-4 sm:pl-5"><p className="font-display text-3xl text-amber-300">{String(completed).padStart(2, '0')}</p><p className="text-[9px] font-bold uppercase tracking-[.16em] text-white/55">Matches completed</p></div></div>
+    </section>
 
-  return (
-    <div className="page-reveal space-y-8 pb-10 sm:space-y-10 sm:pb-16">
-      {/* 1. Hero Banner */}
-      <HeroBanner />
-
-      {/* 2. Official Announcement Carousel */}
-      <AnnouncementCarousel />
-
-      {/* 3. Live League Standings Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="section-rule flex flex-col sm:flex-row sm:items-end justify-between mb-5 gap-2">
-          <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-pl-blue-accent uppercase tracking-wider">
-              <Trophy className="w-4 h-4" />
-              <span>Phase 1 • UCL League Standings</span>
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl uppercase italic text-pl-black">
-              LIVE TOURNAMENT TABLE
-            </h2>
-          </div>
-          <Link
-            href="/standings"
-            className="text-pl-blue-accent hover:text-pl-blue font-bold text-xs uppercase tracking-wider flex items-center gap-1 group"
-          >
-            <span>Detailed Standings & Stats</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-
-        <StandingsTable compact={true} />
+    <main className="mx-auto max-w-7xl space-y-20 px-4 pt-16 sm:px-6 lg:px-8 lg:pt-24">
+      <section className="grid items-stretch gap-8 lg:grid-cols-[1.1fr_.9fr]">
+        <div className="relative overflow-hidden rounded-2xl bg-[#101016] p-7 text-white sm:p-10"><div className="absolute inset-0 bg-diagonal-pattern opacity-10" /><div className="relative"><SectionLabel icon={Radio}>Tournament pulse</SectionLabel><h2 className="mt-4 max-w-xl font-display text-5xl uppercase leading-[.9] sm:text-7xl">The season starts with a draw.</h2><p className="mt-5 max-w-lg text-sm leading-relaxed text-white/65">No fabricated fixtures. No placeholder drama. The competition opens when the captains publish the official matchday schedule.</p><div className="mt-8 grid max-w-lg grid-cols-2 gap-3 sm:grid-cols-3"><div className="rounded-xl border border-white/10 bg-white/5 p-4"><p className="font-display text-3xl text-amber-300">{teams.length}</p><p className="text-[10px] uppercase tracking-wider text-white/50">Teams ready</p></div><div className="rounded-xl border border-white/10 bg-white/5 p-4"><p className="font-display text-3xl text-amber-300">{matches.length}</p><p className="text-[10px] uppercase tracking-wider text-white/50">Fixtures live</p></div><div className="rounded-xl border border-white/10 bg-white/5 p-4"><p className="font-display text-3xl text-amber-300">{leader ? leader.team.code : '—'}</p><p className="text-[10px] uppercase tracking-wider text-white/50">Current leader</p></div></div><Link href="/bracket" className="mt-8 inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-300 hover:text-white">See the road to the final <ChevronRight className="h-4 w-4" /></Link></div></div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-7 shadow-sm sm:p-10"><SectionLabel icon={Shield}>The competition map</SectionLabel><h2 className="mt-4 font-display text-5xl uppercase leading-[.9] text-pl-black sm:text-6xl">One table.<br /><span className="text-pl-blue">Three exits.</span></h2><div className="mt-8 space-y-4"><div className="flex items-center gap-4 border-l-4 border-pl-green bg-green-50 p-4"><span className="font-display text-3xl text-pl-green">01–02</span><div><p className="font-bold text-sm">Direct to semi-finals</p><p className="text-xs text-gray-500">The reward for finishing at the top.</p></div></div><div className="flex items-center gap-4 border-l-4 border-pl-amber bg-amber-50 p-4"><span className="font-display text-3xl text-pl-amber">03–06</span><div><p className="font-bold text-sm">Enter the play-offs</p><p className="text-xs text-gray-500">One more match to stay alive.</p></div></div><div className="flex items-center gap-4 border-l-4 border-pl-red bg-red-50 p-4"><span className="font-display text-3xl text-pl-red">07–08</span><div><p className="font-bold text-sm">Season ends here</p><p className="text-xs text-gray-500">Every point matters from day one.</p></div></div></div></div>
       </section>
 
-      {/* 4. Matchday Fixtures Highlights */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="section-rule flex flex-col sm:flex-row sm:items-end justify-between mb-5 gap-2">
-          <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-pl-blue-accent uppercase tracking-wider">
-              <Calendar className="w-4 h-4" />
-              <span>Featured Fixtures</span>
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl uppercase italic text-pl-black">
-              MATCHDAY ACTION
-            </h2>
-          </div>
-          <Link
-            href="/fixtures"
-            className="text-pl-blue-accent hover:text-pl-blue font-bold text-xs uppercase tracking-wider flex items-center gap-1 group"
-          >
-            <span>Full Schedule (Matchday 1 to 4)</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
+      <section><div className="mb-6 flex flex-col justify-between gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-end"><div><SectionLabel icon={Trophy}>Live league phase</SectionLabel><h2 className="mt-2 font-display text-5xl uppercase leading-none text-pl-black sm:text-6xl">The table starts at zero.</h2></div><Link href="/standings" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-wider text-pl-blue hover:text-pl-blue-accent">Full standings <ArrowRight className="h-4 w-4" /></Link></div><div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"><div className="grid grid-cols-[3rem_1fr_repeat(3,4rem)] items-center gap-2 bg-pl-blue px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-white sm:grid-cols-[4rem_1fr_repeat(4,5rem)] sm:px-6"><span>#</span><span>Department</span><span className="text-center">MP</span><span className="text-center">GD</span><span className="text-center">PTS</span><span className="hidden text-center sm:block">Path</span></div>{standings.slice(0, 5).map((row) => <Link key={row.team.id} href={`/teams/${row.team.code.toLowerCase()}`} className="grid min-h-[4.75rem] grid-cols-[3rem_1fr_repeat(3,4rem)] items-center gap-2 border-b border-gray-100 px-4 transition hover:bg-blue-50 sm:grid-cols-[4rem_1fr_repeat(4,5rem)] sm:px-6"><span className={`flex h-7 w-7 items-center justify-center rounded-md font-display text-base text-white ${row.zone === 'direct' ? 'bg-pl-green' : row.zone === 'eliminated' ? 'bg-pl-red' : 'bg-pl-amber'}`}>{row.rank}</span><span className="flex min-w-0 items-center gap-3"><span className="relative h-9 w-9 shrink-0"><Image src={row.team.badgeUrl} alt={`${row.team.code} badge`} fill className="object-contain" /></span><span className="min-w-0"><strong className="block font-display text-2xl leading-none">{row.team.code}</strong><small className="block truncate text-[10px] text-gray-500 sm:text-xs">{row.team.department}</small></span></span><span className="text-center text-xs font-semibold text-gray-700">{row.mp}</span><span className="text-center text-xs font-semibold text-gray-700">{row.gd > 0 ? `+${row.gd}` : row.gd}</span><span className="text-center font-display text-2xl text-pl-blue">{row.points}</span><span className="hidden text-center text-[10px] font-bold uppercase tracking-wider text-gray-400 sm:block">{row.zone === 'direct' ? 'Semi-final' : row.zone === 'eliminated' ? 'Out' : 'Play-off'}</span></Link>)}</div></section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {upcoming.length > 0 ? (
-            upcoming.map((match) => <FixtureCard key={match.id} match={match} />)
-          ) : (
-            recentOrLive.map((match) => <FixtureCard key={match.id} match={match} />)
-          )}
-        </div>
-      </section>
+      <section><div className="mb-6 flex flex-col justify-between gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-end"><div><SectionLabel icon={CalendarDays}>Matchday action</SectionLabel><h2 className="mt-2 font-display text-5xl uppercase leading-none text-pl-black sm:text-6xl">Next under the lights.</h2></div><Link href="/fixtures" className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-wider text-pl-blue hover:text-pl-blue-accent">Full schedule <ArrowRight className="h-4 w-4" /></Link></div>{featuredMatches.length ? <div className="grid gap-6 md:grid-cols-2">{featuredMatches.map((match) => <FixtureCard key={match.id} match={match} />)}</div> : <div className="grid items-center gap-8 rounded-2xl border border-dashed border-pl-blue/25 bg-white p-7 shadow-sm sm:p-10 lg:grid-cols-[.8fr_1.2fr]"><div><p className="font-display text-7xl leading-none text-pl-blue/15">TBD</p><p className="mt-2 text-xs font-bold uppercase tracking-[.18em] text-pl-blue-accent">Awaiting the official draw</p></div><div><h3 className="font-display text-4xl uppercase">No fixtures yet. That is the point.</h3><p className="mt-3 max-w-xl text-sm leading-relaxed text-gray-600">Once the captains publish Matchday 1, this space becomes the fastest way to see what is next, who is live, and who has made history.</p></div></div>}</section>
 
-      {/* 5. Competing Teams Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="section-rule text-center mb-6">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-pl-blue-accent uppercase tracking-wider">
-            <Users className="w-4 h-4" />
-            <span>The Contenders</span>
-          </div>
-          <h2 className="font-display text-3xl sm:text-4xl uppercase italic text-pl-black">
-            8 DEPARTMENTS COMPETING
-          </h2>
-          <p className="text-gray-600 text-sm max-w-lg mx-auto mt-1 font-normal">
-            Select any department to view their captain, squad status, and match results.
-          </p>
-        </div>
+      <section><div className="mb-7 text-center"><SectionLabel icon={Users}>The contenders</SectionLabel><h2 className="mt-2 font-display text-5xl uppercase leading-none text-pl-black sm:text-6xl">Meet the eight.</h2><p className="mx-auto mt-3 max-w-xl text-sm text-gray-500">Every department brings its own identity, captain, and route to the trophy.</p></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">{teams.map((team, index) => <motion.div key={team.id} whileHover={{ y: -5 }} transition={{ duration: .2 }}><Link href={`/teams/${team.code.toLowerCase()}`} className="group flex h-full min-h-[13rem] flex-col justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-pl-blue/30 hover:shadow-xl sm:p-5"><div className="flex items-start justify-between"><span className="font-display text-3xl text-gray-200">0{index + 1}</span><span className="rounded-full bg-blue-50 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-pl-blue">{team.code}</span></div><div className="relative mx-auto my-3 h-20 w-20 transition-transform group-hover:scale-110 sm:h-24 sm:w-24"><Image src={team.badgeUrl} alt={`${team.code} badge`} fill className="object-contain" /></div><div><h3 className="font-display text-2xl uppercase leading-none text-pl-black group-hover:text-pl-blue">{team.department}</h3><p className="mt-2 truncate text-[10px] text-gray-500">Captain · {team.captainName}</p></div></Link></motion.div>)}</div></section>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
-          {teams.map((team) => (
-            <motion.div
-              key={team.id}
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Link
-                href={`/teams/${team.code.toLowerCase()}`}
-                className="bg-white rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-lg border border-gray-200 flex flex-col items-center text-center transition-all group h-full"
-              >
-                <div className="relative w-16 h-16 sm:w-24 sm:h-24 mb-3 group-hover:scale-105 transition-transform">
-                  <Image
-                    src={team.badgeUrl}
-                    alt={team.name}
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-                <span className="font-display text-xl sm:text-2xl text-pl-black group-hover:text-pl-blue leading-none">
-                  {team.code}
-                </span>
-                <span className="text-xs text-gray-500 font-medium mt-1">
-                  {team.department}
-                </span>
-                <div className="mt-4 pt-3 border-t border-gray-100 w-full text-[11px] text-gray-600">
-                  Captain: <strong className="text-gray-900 block truncate">{team.captainName}</strong>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      <section className="grid gap-8 lg:grid-cols-[1fr_.8fr]"><div><div className="mb-6"><SectionLabel icon={Radio}>Official release</SectionLabel><h2 className="mt-2 font-display text-5xl uppercase leading-none text-pl-black sm:text-6xl">From the league office.</h2></div><AnnouncementCarousel /></div><div className="relative overflow-hidden rounded-2xl bg-pl-blue p-8 text-white shadow-lg sm:p-10"><div className="absolute inset-0 bg-diagonal-pattern opacity-10" /><div className="relative"><p className="font-display text-7xl leading-none text-amber-300">02</p><h3 className="mt-3 font-display text-5xl uppercase leading-[.9]">Phases.<br />One champion.</h3><p className="mt-5 text-sm leading-relaxed text-white/70">Follow the league table, survive the play-offs, and make it to the championship showdown.</p><Link href="/rules" className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/25 px-4 py-3 text-xs font-bold uppercase tracking-wider hover:bg-white/10">Read the rulebook <ArrowRight className="h-4 w-4" /></Link></div></div></section>
 
-      <section className="px-4 sm:px-6 lg:px-8" aria-label="Fantasy mode coming soon">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-2xl bg-pl-black px-6 py-10 text-center text-white shadow-xl sm:px-10 sm:py-14">
-          <div className="absolute inset-0 bg-diagonal-pattern opacity-10" />
-          <div className="relative flex flex-col items-center gap-4">
-            <Sparkles className="h-5 w-5 text-amber-300 animate-pulse" aria-hidden="true" />
-            <div className="relative flex h-36 w-20 items-center justify-center rounded-[1.25rem] border-2 border-amber-300/70 bg-pl-blue/50 shadow-[0_0_35px_rgba(222,190,118,.45)] sm:h-44 sm:w-24">
-              <div className="absolute left-1/2 top-2 h-1 w-8 -translate-x-1/2 rounded-full bg-white/40" />
-              <Smartphone className="absolute inset-0 m-auto h-16 w-16 text-white/15 sm:h-20 sm:w-20" aria-hidden="true" />
-              <CircleHelp className="relative z-10 h-12 w-12 text-amber-300 sm:h-14 sm:w-14" aria-hidden="true" />
-            </div>
-            <p className="font-display text-3xl uppercase italic text-amber-300 sm:text-4xl">Fantasy mode</p>
-            <p className="max-w-md text-sm text-white/70">Build your squad, follow every score, and compete in a new way.</p>
-            <span className="rounded-full border border-white/20 px-4 py-1 text-[10px] font-bold uppercase tracking-[.2em] text-white/80">Coming soon</span>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
+      <section className="relative overflow-hidden rounded-[2rem] bg-[#101016] px-6 py-12 text-center text-white sm:px-10 sm:py-16"><div className="absolute inset-0 bg-diagonal-pattern opacity-10" /><div className="relative mx-auto max-w-2xl"><p className="font-display text-5xl uppercase text-amber-300 sm:text-7xl">The next chapter is fantasy.</p><p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-white/60">Build your squad, follow every score, and compete in a new way. Fantasy mode is coming soon.</p><span className="mt-7 inline-flex items-center rounded-full border border-white/20 px-4 py-2 text-[10px] font-bold uppercase tracking-[.2em] text-white/70">Coming soon</span>{publishedHighlights.length > 0 && <span className="ml-2 mt-7 inline-flex items-center rounded-full border border-amber-300/30 px-4 py-2 text-[10px] font-bold uppercase tracking-[.2em] text-amber-300">{publishedHighlights.length} archive updates</span>}</div></section>
+    </main>
+  </div>;
 }
