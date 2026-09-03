@@ -16,10 +16,15 @@ alter table public.highlights alter column approval_status set default 'pending'
 alter table public.highlights add column if not exists created_by uuid references auth.users(id);
 alter table public.highlights add column if not exists reviewed_by uuid references auth.users(id);
 alter table public.highlights add column if not exists reviewed_at timestamptz;
+alter table public.highlights add column if not exists content_type text
+  check (content_type in ('score', 'article', 'video')) default 'article';
+alter table public.highlights add column if not exists scoreline text;
+alter table public.highlights add column if not exists tags text[] default '{}';
 alter table public.matches add column if not exists match_period text
   check (match_period in ('pre-match', 'first-half', 'second-half', 'full-time'))
   default 'pre-match';
 alter table public.matches add column if not exists scorers jsonb not null default '[]'::jsonb;
+alter table public.matches add column if not exists round_label text;
 
 create or replace function public.is_super_admin()
 returns boolean language sql stable security definer set search_path = public as $$
@@ -27,15 +32,26 @@ returns boolean language sql stable security definer set search_path = public as
 $$;
 
 drop policy if exists "Allow public read highlights" on public.highlights;
+drop policy if exists "Allow public read approved highlights" on public.highlights;
 create policy "Allow public read approved highlights" on public.highlights
   for select using (approval_status = 'approved');
+drop policy if exists "Allow super admins to read all highlights" on public.highlights;
+create policy "Allow super admins to read all highlights" on public.highlights
+  for select using (public.is_super_admin());
+drop policy if exists "Allow super admins to publish highlights" on public.highlights;
+create policy "Allow super admins to publish highlights" on public.highlights
+  for insert with check (public.is_super_admin() and approval_status = 'approved');
+drop policy if exists "Allow captains to submit highlights" on public.highlights;
 create policy "Allow captains to submit highlights" on public.highlights
   for insert with check (auth.uid() is not null and approval_status = 'pending');
+drop policy if exists "Allow captains to edit pending highlights" on public.highlights;
 create policy "Allow captains to edit pending highlights" on public.highlights
   for update using (created_by = auth.uid() and approval_status = 'pending')
   with check (created_by = auth.uid() and approval_status = 'pending');
+drop policy if exists "Allow super admins to review highlights" on public.highlights;
 create policy "Allow super admins to review highlights" on public.highlights
   for update using (public.is_super_admin()) with check (public.is_super_admin());
+drop policy if exists "Allow super admins to delete highlights" on public.highlights;
 create policy "Allow super admins to delete highlights" on public.highlights
   for delete using (public.is_super_admin());
 
@@ -75,6 +91,19 @@ create policy "Allow super admins to update players" on public.players
 drop policy if exists "Allow super admins to delete players" on public.players;
 create policy "Allow super admins to delete players" on public.players
   for delete using (public.is_super_admin());
+
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'matches') then
+    alter publication supabase_realtime add table public.matches;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'players') then
+    alter publication supabase_realtime add table public.players;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'highlights') then
+    alter publication supabase_realtime add table public.highlights;
+  end if;
+end $$;
 
 -- After creating Mouici in Authentication > Users, replace the UUID below and run once.
 -- A super admin is global and intentionally has no team assignment.

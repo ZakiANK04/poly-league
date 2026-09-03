@@ -34,7 +34,7 @@ export default function SuperAdminDashboard() {
 
       {activeView === 'scores' && <MatchManager matches={matches} teams={teams} players={players} onUpdate={updateMatch} onAdd={addMatch} onRemove={removeMatch} />}
       {activeView === 'squads' && <SquadOverview teams={teams} players={players} onAdd={addPlayer} onUpdate={updatePlayer} onRemove={removePlayer} />}
-      {activeView === 'review' && <div className="space-y-5"><PublishNews onPublish={addApprovedHighlight} /><ReviewQueue highlights={highlights} onReview={(id, status) => updateHighlight(id, { approvalStatus: status, reviewedBy: currentCaptain?.name, reviewedAt: new Date().toISOString() })} /><PublishedNews highlights={highlights} onUpdate={updateHighlight} /></div>}
+      {activeView === 'review' && <div className="space-y-5"><PublishNews onPublish={addApprovedHighlight} /><ReviewQueue highlights={highlights} onReview={(id, status) => updateHighlight(id, { approvalStatus: status, reviewedBy: currentCaptain?.userId, reviewedAt: new Date().toISOString() })} /><PublishedNews highlights={highlights} onUpdate={updateHighlight} /></div>}
     </div>
   );
 }

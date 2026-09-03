@@ -41,6 +41,7 @@ create table if not exists matches (
   id uuid primary key default gen_random_uuid(),
   phase text check (phase in ('league','playoff','semifinal','final')) not null,
   matchday int,
+  round_label text,
   home_team_id uuid references teams(id) not null,
   away_team_id uuid references teams(id) not null,
   scheduled_at timestamptz,
@@ -63,6 +64,9 @@ create table if not exists highlights (
   description text,
   media_url text,
   media_type text check (media_type in ('image','video')),
+  content_type text check (content_type in ('score','article','video')) default 'article',
+  scoreline text,
+  tags text[] default '{}',
   approval_status text check (approval_status in ('pending','approved','rejected')) not null default 'pending',
   created_by uuid references auth.users(id),
   reviewed_by uuid references auth.users(id),
@@ -149,6 +153,10 @@ create policy "Allow captains to edit pending highlights" on highlights
 
 create policy "Allow super admins to review highlights" on highlights
   for update using (public.is_super_admin()) with check (public.is_super_admin());
+create policy "Allow super admins to read all highlights" on highlights
+  for select using (public.is_super_admin());
+create policy "Allow super admins to publish highlights" on highlights
+  for insert with check (public.is_super_admin() and approval_status = 'approved');
 
 create policy "Allow super admins to delete highlights" on highlights
   for delete using (public.is_super_admin());
