@@ -2,76 +2,14 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Award } from 'lucide-react';
+import Link from 'next/link';
+import { Award, ArrowRight, Camera, Upload } from 'lucide-react';
 import { useTournament } from '@/lib/tournament-context';
 
 export default function HighlightsPage() {
   const { publishedHighlights: highlights } = useTournament();
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Header */}
-      <div className="relative bg-pl-blue text-white rounded-2xl p-6 sm:p-10 overflow-hidden shadow-lg border-b-4 border-pl-blue-accent">
-        <div className="absolute inset-0 bg-diagonal-pattern opacity-20 pointer-events-none" />
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
-            <Award className="w-4 h-4" />
-            <span>Legacy & Moments</span>
-          </div>
-          <h1 className="font-display text-4xl sm:text-6xl uppercase italic tracking-wider text-white">
-            LAST EDITION HIGHLIGHTS
-          </h1>
-          <p className="text-white/85 text-sm max-w-2xl leading-relaxed">
-            Relive the greatest moments, clutch goals, and championship trophies from the previous Poly League tournament.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {highlights.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200 flex flex-col hover:shadow-xl transition-shadow"
-          >
-              <div className="relative h-48 bg-pl-blue/10 flex items-center justify-center p-4">
-              {item.contentType === 'score' ? (
-                <div className="text-center">
-                  <span className="font-display text-5xl text-pl-blue">{item.scoreline || 'VS'}</span>
-                  <span className="block text-xs font-bold uppercase tracking-widest text-pl-blue-accent mt-2">Live score update</span>
-                </div>
-              ) : item.mediaType === 'video' ? (
-                <video src={item.mediaUrl} controls className="h-full w-full object-cover" aria-label={item.title} />
-              ) : (
-                <Image src={item.mediaUrl} alt={item.caption || item.title} fill className="object-cover" />
-              )}
-              <span className="absolute top-3 right-3 bg-pl-blue text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                {item.season}
-              </span>
-            </div>
-
-            <div className="p-6 flex-1 flex flex-col justify-between">
-              <div className="space-y-2">
-                <h3 className="font-display text-2xl text-pl-black leading-snug">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-gray-600 leading-relaxed font-normal">
-                  {item.caption || item.description}
-                </p>
-              </div>
-
-              <div className="pt-4 flex flex-wrap gap-1.5 mt-4 border-t border-gray-100">
-                {item.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="relative overflow-hidden rounded-2xl border-b-4 border-pl-blue-accent bg-pl-blue p-6 text-white shadow-lg sm:p-10"><div className="absolute inset-0 bg-diagonal-pattern opacity-20" /><div className="relative space-y-3"><div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-300"><Award className="h-4 w-4" /> Legacy & moments</div><h1 className="font-display text-5xl uppercase italic tracking-wide sm:text-7xl">Last edition highlights</h1><p className="max-w-2xl text-sm leading-relaxed text-white/80">Goals, turning points, and championship memories from the Poly League archive.</p></div></div>
+    {highlights.length > 0 ? <div className="grid grid-cols-1 gap-6 md:grid-cols-3">{highlights.map((item) => <article key={item.id} className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-xl"><div className="relative flex h-52 items-center justify-center bg-pl-blue/10 p-4">{item.contentType === 'score' ? <div className="text-center"><span className="font-display text-5xl text-pl-blue">{item.scoreline || 'VS'}</span><span className="mt-2 block text-xs font-bold uppercase tracking-widest text-pl-blue-accent">Score update</span></div> : item.mediaType === 'video' ? <video src={item.mediaUrl} controls className="h-full w-full object-cover" aria-label={item.title} /> : <Image src={item.mediaUrl} alt={item.caption || item.title} fill className="object-cover" />}<span className="absolute right-3 top-3 rounded-full bg-pl-blue px-2 py-1 text-[10px] font-bold uppercase text-white">{item.season}</span></div><div className="flex flex-1 flex-col justify-between p-6"><div><h2 className="font-display text-3xl uppercase text-pl-black">{item.title}</h2><p className="mt-2 text-sm leading-relaxed text-gray-600">{item.caption || item.description}</p></div><div className="mt-5 flex flex-wrap gap-1.5 border-t border-gray-100 pt-4">{item.tags.map((tag) => <span key={tag} className="rounded bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">#{tag}</span>)}</div></div></article>)}</div> : <section className="relative overflow-hidden rounded-2xl border border-dashed border-pl-blue/25 bg-white px-6 py-16 text-center shadow-sm sm:px-12"><div className="absolute inset-y-0 right-0 w-1/3 bg-diagonal-pattern opacity-[.04]" /><div className="relative mx-auto max-w-2xl"><div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-pl-blue text-amber-300 shadow-lg"><Camera className="h-7 w-7" /></div><p className="mb-2 text-xs font-bold uppercase tracking-[.18em] text-pl-blue-accent">Archive being assembled</p><h2 className="font-display text-4xl uppercase text-pl-black sm:text-5xl">The best moments are next</h2><p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-gray-600">The previous-edition media archive has not been published yet. Captains can submit verified match stories, scorelines, photos, and videos through the private portal.</p><div className="mt-7 flex flex-wrap justify-center gap-3"><Link href="/rules" className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-pl-blue px-4 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-pl-blue-accent">Explore the competition <ArrowRight className="h-4 w-4" /></Link><span className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-gray-200 px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-500"><Upload className="h-4 w-4" /> Verified submissions only</span></div></div></section>}
+  </div>;
 }

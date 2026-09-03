@@ -1,69 +1,20 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Calendar } from 'lucide-react';
+import Link from 'next/link';
+import { Calendar, Clock3, ArrowRight, Info } from 'lucide-react';
 import FixtureCard from '@/components/FixtureCard';
 import { useTournament } from '@/lib/tournament-context';
 
 export default function FixturesPage() {
   const { matches } = useTournament();
   const [selectedTab, setSelectedTab] = useState<'all' | '1' | '2' | '3' | '4' | 'knockout'>('all');
-
-  const filteredMatches = matches.filter((m) => {
-    if (selectedTab === 'all') return true;
-    if (selectedTab === 'knockout') return m.phase !== 'league';
-    return m.matchday === parseInt(selectedTab);
-  });
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Header Banner */}
-      <div className="relative bg-pl-blue text-white rounded-2xl p-6 sm:p-10 overflow-hidden shadow-lg border-b-4 border-pl-blue-accent">
-        <div className="absolute inset-0 bg-diagonal-pattern opacity-20 pointer-events-none" />
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
-            <Calendar className="w-4 h-4" />
-            <span>Tournament Schedule</span>
-          </div>
-          <h1 className="font-display text-4xl sm:text-6xl uppercase italic tracking-wider text-white">
-            FIXTURES & RESULTS
-          </h1>
-          <p className="text-white/85 text-sm max-w-2xl leading-relaxed">
-            All 4 league matchdays and the knockout phase fixtures, with live status and results.
-          </p>
-        </div>
-      </div>
-
-      {/* Matchday Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-4">
-        {[
-          { id: 'all', label: 'All Matches' },
-          { id: '1', label: 'Matchday 1' },
-          { id: '2', label: 'Matchday 2' },
-          { id: '3', label: 'Matchday 3' },
-          { id: '4', label: 'Matchday 4' },
-          { id: 'knockout', label: 'Knockout Phase' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setSelectedTab(tab.id as 'all' | '1' | '2' | '3' | '4' | 'knockout')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-              selectedTab === tab.id
-                ? 'bg-pl-blue text-white shadow-md'
-                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Fixtures Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredMatches.map((match) => (
-          <FixtureCard key={match.id} match={match} />
-        ))}
-      </div>
-    </div>
-  );
+  const tabs = [{ id: 'all', label: 'All matches' }, { id: '1', label: 'Matchday 1' }, { id: '2', label: 'Matchday 2' }, { id: '3', label: 'Matchday 3' }, { id: '4', label: 'Matchday 4' }, { id: 'knockout', label: 'Knockout phase' }] as const;
+  const filteredMatches = matches.filter((m) => selectedTab === 'all' ? true : selectedTab === 'knockout' ? m.phase !== 'league' : m.matchday === Number(selectedTab));
+  return <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="relative overflow-hidden rounded-2xl border-b-4 border-pl-blue-accent bg-pl-blue p-6 text-white shadow-lg sm:p-10"><div className="absolute inset-0 bg-diagonal-pattern opacity-20" /><div className="relative space-y-3"><div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-300"><Calendar className="h-4 w-4" /> Tournament schedule</div><h1 className="font-display text-5xl uppercase italic tracking-wide sm:text-7xl">Fixtures & results</h1><p className="max-w-2xl text-sm leading-relaxed text-white/80">Every league matchday and knockout tie, with scores and live status as the season unfolds.</p></div></div>
+    <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-4" role="tablist" aria-label="Fixture filters">{tabs.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={selectedTab === tab.id} onClick={() => setSelectedTab(tab.id)} className={`min-h-11 rounded-xl px-4 text-xs font-bold uppercase tracking-wider transition-all ${selectedTab === tab.id ? 'bg-pl-blue text-white shadow-md' : 'border border-gray-200 bg-white text-gray-700 hover:border-pl-blue/30 hover:bg-blue-50'}`}>{tab.label}{tab.id !== 'all' && <span className="ml-1 text-[10px] opacity-60">{tab.id === 'knockout' ? matches.filter((m) => m.phase !== 'league').length : matches.filter((m) => m.matchday === Number(tab.id)).length}</span>}</button>)}</div>
+    {filteredMatches.length > 0 ? <div className="grid grid-cols-1 gap-6 md:grid-cols-2">{filteredMatches.map((match) => <FixtureCard key={match.id} match={match} />)}</div> : <section className="relative overflow-hidden rounded-2xl border border-dashed border-pl-blue/25 bg-white px-6 py-14 text-center shadow-sm sm:px-12"><div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-pl-blue/5 blur-3xl" /><div className="relative mx-auto max-w-2xl"><div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-pl-blue text-amber-300 shadow-lg"><Clock3 className="h-7 w-7" /></div><p className="mb-2 text-xs font-bold uppercase tracking-[.18em] text-pl-blue-accent">Pre-season schedule</p><h2 className="font-display text-4xl uppercase text-pl-black sm:text-5xl">The draw is still pending</h2><p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-gray-600">Fixtures will appear here after the captains publish the official draw. Until then, explore how the four-matchday league phase feeds the championship bracket.</p><div className="mt-7 flex flex-wrap justify-center gap-3"><Link href="/rules" className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-pl-blue px-4 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-pl-blue-accent">Read the format <ArrowRight className="h-4 w-4" /></Link><Link href="/captains" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-800 hover:border-pl-blue/30 hover:bg-blue-50">Meet the captains</Link></div></div></section>}
+    <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-xs text-blue-900"><Info className="mt-0.5 h-4 w-4 shrink-0" /><p><strong>How updates work:</strong> published match times, scores, and status changes sync to public pages in realtime once the tournament operations team updates them.</p></div>
+  </div>;
 }

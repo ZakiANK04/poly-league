@@ -1,106 +1,63 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Radio } from 'lucide-react';
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-
   const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/standings', label: 'Standings' },
-    { href: '/fixtures', label: 'Fixtures' },
-    { href: '/bracket', label: 'Knockout' },
-    { href: '/teams', label: 'Teams' },
-    { href: '/captains', label: 'Captains' },
-    { href: '/rules', label: 'Format & Rules' },
-    { href: '/highlights', label: 'Highlights' },
+    { href: '/', label: 'Home' }, { href: '/standings', label: 'Standings' },
+    { href: '/fixtures', label: 'Fixtures' }, { href: '/bracket', label: 'Knockout' },
+    { href: '/teams', label: 'Teams' }, { href: '/captains', label: 'Captains' },
+    { href: '/rules', label: 'Format & Rules' }, { href: '/highlights', label: 'Highlights' },
   ];
+  const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href);
 
-  const isActive = (href: string) => {
-    if (href === '/') return pathname === '/';
-    return pathname.startsWith(href);
-  };
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
 
   return (
-    <header className="sticky top-0 z-50 bg-pl-blue text-white shadow-lg border-b-2 border-pl-blue-accent">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex min-h-[3rem] items-center justify-between py-1 overflow-visible">
-          {/* Tournament Logo & Brand */}
-          <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="relative h-8 w-8 sm:h-9 sm:w-9 bg-white rounded-full p-1 shadow-md group-hover:scale-105 transition-transform flex-shrink-0">
-              <Image
-                src="/assets/Logo_polyleague.png"
-                alt="Poly League"
-                fill
-                className="object-contain p-0.5"
-                priority
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-sakana text-xs sm:text-sm tracking-wide text-white uppercase italic leading-none">
-                POLY LEAGUE
-              </span>
-              <span className="text-[6px] sm:text-[7px] text-amber-300 uppercase tracking-[.14em] font-bold mt-1">
-                Competition of the elites
-              </span>
-            </div>
-          </Link>
-
-          {/* Desktop Nav Links (Public Spectators) */}
-          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide transition-all ${
-                  isActive(link.href)
-                    ? 'bg-white text-pl-blue shadow-sm'
-                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Mobile Menu Hamburger */}
-          <div className="flex lg:hidden items-center">
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="p-2 text-white hover:text-white/80 focus:outline-none"
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+    <header className="sticky top-0 z-50 border-b border-white/15 bg-pl-blue text-white shadow-lg">
+      <div className="mx-auto flex min-h-[4.25rem] max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="group flex min-h-11 shrink-0 items-center gap-3" aria-label="Poly League home">
+          <div className="relative h-9 w-9 rounded-full bg-white p-1 shadow-md transition-transform group-hover:scale-105">
+            <Image src="/assets/Logo_polyleague.png" alt="Poly League crest" fill className="object-contain p-0.5" priority />
           </div>
-        </div>
-      </div>
+          <div className="hidden flex-col sm:flex">
+            <span className="font-display text-lg uppercase italic leading-none tracking-wide">Poly League</span>
+            <span className="mt-1 text-[8px] font-bold uppercase tracking-[.18em] text-amber-300">Season 2026 · Official portal</span>
+          </div>
+        </Link>
 
-      {/* Mobile Drawer */}
-      {mobileOpen && (
-        <div className="lg:hidden bg-pl-blue-dark border-t border-white/10 px-4 pt-3 pb-6 space-y-1 shadow-2xl">
+        <nav className="hidden items-center gap-0.5 xl:flex" aria-label="Primary navigation">
           {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className={`block px-4 py-3 rounded-md text-base font-bold uppercase tracking-wider ${
-                isActive(link.href)
-                  ? 'bg-white text-pl-blue font-black'
-                  : 'text-white/90 hover:bg-white/10'
-              }`}
-            >
+            <Link key={link.href} href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}
+              className={`inline-flex min-h-11 items-center rounded-md px-2.5 text-[11px] font-bold uppercase tracking-wide transition-colors ${isActive(link.href) ? 'bg-white text-pl-blue shadow-sm' : 'text-white/85 hover:bg-white/10 hover:text-white'}`}>
               {link.label}
             </Link>
           ))}
+        </nav>
 
+        <div className="hidden items-center gap-2 xl:flex">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/80"><Radio className="h-3 w-3 text-amber-300" /> Pre-season</span>
         </div>
-      )}
+        <button type="button" onClick={() => setMobileOpen((open) => !open)} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-white hover:bg-white/10 focus:outline-none xl:hidden" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="mobile-navigation">
+          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
+      {mobileOpen && <div id="mobile-navigation" className="border-t border-white/10 bg-[#030477] px-4 pb-5 pt-3 xl:hidden" role="dialog" aria-label="Mobile navigation">
+        <div className="mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-[.16em] text-amber-300"><span>Season 2026</span><span>Pre-season</span></div>
+        <nav className="grid gap-1" aria-label="Mobile navigation links">
+          {navLinks.map((link) => <Link key={link.href} href={link.href} aria-current={isActive(link.href) ? 'page' : undefined} className={`flex min-h-12 items-center rounded-lg px-4 text-sm font-bold uppercase tracking-wider ${isActive(link.href) ? 'bg-white text-pl-blue' : 'text-white/90 hover:bg-white/10'}`}>{link.label}</Link>)}
+        </nav>
+      </div>}
     </header>
   );
 }

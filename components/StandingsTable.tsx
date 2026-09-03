@@ -23,7 +23,7 @@ export default function StandingsTable({ compact = false }: { compact?: boolean 
     <div className="space-y-4">
       {/* Desktop & Tablet Table */}
       <div className="hidden sm:block overflow-x-auto bg-white rounded-2xl shadow-lg border border-gray-200">
-        <table className="w-full table-fixed text-left border-collapse">
+        <table className="w-full min-w-[760px] text-left border-collapse">
           <colgroup>
             <col className="w-14" />
             <col />
@@ -73,7 +73,7 @@ export default function StandingsTable({ compact = false }: { compact?: boolean 
                 <td className="py-3.5 px-4">
                   <Link
                     href={`/teams/${row.team.code.toLowerCase()}`}
-                    className="flex items-center gap-3.5"
+                    className="flex min-h-11 items-center gap-3.5"
                   >
                     <div className="relative w-10 h-10 sm:w-11 sm:h-11 flex-shrink-0 group-hover:scale-110 transition-transform">
                       <Image
@@ -158,7 +158,7 @@ export default function StandingsTable({ compact = false }: { compact?: boolean 
               </div>
               <div className="min-w-0">
                 <span className="font-display text-xl block leading-none">{row.team.code}</span>
-                <span className="text-[11px] text-gray-500 block truncate max-w-[130px]">{row.team.department}</span>
+                <span className="text-[11px] text-gray-500 block truncate max-w-[170px]">{row.team.department}</span>
               </div>
             </div>
 
@@ -167,7 +167,7 @@ export default function StandingsTable({ compact = false }: { compact?: boolean 
                 <div>MP: <span className="font-bold text-gray-800">{row.mp}</span></div>
                 <div>GD: <span className="font-bold text-gray-800">{row.gd > 0 ? `+${row.gd}` : row.gd}</span></div>
               </div>
-              <div className="bg-pl-blue/10 px-2 py-1 rounded-lg font-display text-xl text-pl-blue-accent font-bold whitespace-nowrap">
+              <div className="bg-pl-blue/10 px-2 py-1 rounded-lg font-display text-xl text-pl-blue-accent font-bold whitespace-nowrap" aria-label={`${row.points} points`}>
                 {row.points} PTS
               </div>
             </div>
