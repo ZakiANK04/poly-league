@@ -2,13 +2,13 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { Check, ClipboardCheck, FilePlus2, Plus, Shield, Trophy, Trash2, Users, X } from 'lucide-react';
+import { Check, ClipboardCheck, FilePlus2, Plus, Shield, Shuffle, Trophy, Trash2, Users, X } from 'lucide-react';
 import { MatchPeriod, MatchStatus, MatchScorer, Player } from '@/lib/types';
 import { useTournament } from '@/lib/tournament-context';
 
 export default function SuperAdminDashboard() {
-  const { teams, players, matches, highlights, portalRole, authLoading, currentCaptain, updateMatch, addMatch, removeMatch, addPlayer, updatePlayer, removePlayer, addApprovedHighlight, updateHighlight, uploadHighlightMedia } = useTournament();
-  const [activeView, setActiveView] = useState<'scores' | 'squads' | 'review'>('scores');
+  const { teams, players, matches, highlights, portalRole, authLoading, currentCaptain, knockoutDraw, updateMatch, addMatch, removeMatch, addPlayer, updatePlayer, removePlayer, addApprovedHighlight, updateHighlight, uploadHighlightMedia, conductKnockoutDraw, resetKnockoutDraw } = useTournament();
+  const [activeView, setActiveView] = useState<'scores' | 'squads' | 'draws' | 'review'>('scores');
 
   if (authLoading) {
     return <div className="mx-auto max-w-xl px-4 py-20 text-center"><Shield className="mx-auto mb-4 h-10 w-10 text-pl-blue animate-pulse" /><h1 className="font-display text-3xl uppercase">Loading control room…</h1><p className="mt-2 text-sm text-gray-600">Verifying super admin credentials.</p></div>;
@@ -32,11 +32,13 @@ export default function SuperAdminDashboard() {
 
       <nav className="flex gap-1 overflow-x-auto border-b border-gray-200" aria-label="Super admin sections">
         <AdminTab active={activeView === 'scores'} onClick={() => setActiveView('scores')} icon={<Trophy className="h-4 w-4" />}>Score control</AdminTab>
+        <AdminTab active={activeView === 'draws'} onClick={() => setActiveView('draws')} icon={<Shuffle className="h-4 w-4" />}>Draw control</AdminTab>
         <AdminTab active={activeView === 'squads'} onClick={() => setActiveView('squads')} icon={<Users className="h-4 w-4" />}>All squads</AdminTab>
         <AdminTab active={activeView === 'review'} onClick={() => setActiveView('review')} icon={<ClipboardCheck className="h-4 w-4" />}>Review queue ({pendingHighlights.length})</AdminTab>
       </nav>
 
       {activeView === 'scores' && <MatchManager matches={matches} teams={teams} players={players} onUpdate={updateMatch} onAdd={addMatch} onRemove={removeMatch} />}
+      {activeView === 'draws' && <DrawControl knockoutDraw={knockoutDraw} currentCaptain={currentCaptain} onDraw={() => conductKnockoutDraw(currentCaptain?.name || 'Super admin')} onReset={resetKnockoutDraw} />}
       {activeView === 'squads' && <SquadOverview teams={teams} players={players} onAdd={addPlayer} onUpdate={updatePlayer} onRemove={removePlayer} />}
       {activeView === 'review' && <div className="space-y-5"><PublishNews onPublish={addApprovedHighlight} onUpload={uploadHighlightMedia} /><ReviewQueue highlights={highlights} onReview={(id, status) => updateHighlight(id, { approvalStatus: status, reviewedBy: currentCaptain?.userId, reviewedAt: new Date().toISOString() })} /><PublishedNews highlights={highlights} onUpdate={updateHighlight} /></div>}
     </div>
@@ -45,6 +47,10 @@ export default function SuperAdminDashboard() {
 
 function AdminTab({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) {
   return <button onClick={onClick} className={`flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-xs font-bold uppercase tracking-wide transition ${active ? 'border-pl-blue text-pl-blue' : 'border-transparent text-gray-400 hover:text-gray-900'}`}>{icon}{children}</button>;
+}
+
+function DrawControl({ knockoutDraw, currentCaptain, onDraw, onReset }: { knockoutDraw: ReturnType<typeof useTournament>['knockoutDraw']; currentCaptain: ReturnType<typeof useTournament>['currentCaptain']; onDraw: () => void; onReset: () => void }) {
+  return <section className="space-y-4"><div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-pl-blue"><Shuffle className="h-4 w-4" /> Super-admin draw control</div><h2 className="mt-2 font-display text-2xl uppercase">Knockout draw</h2><p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-500">League-phase fixtures are configured manually from the externally provided draw. This control is only for publishing the later knockout bracket. Captains can view the published result but cannot run or reset it.</p></div><div className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">{knockoutDraw.isDrawn ? <><p className="font-display text-2xl text-emerald-700">Knockout draw published</p><p className="mt-2 text-xs text-gray-500">Drawn by {knockoutDraw.drawnBy || currentCaptain?.name || 'super admin'}{knockoutDraw.drawnAt ? ` on ${new Date(knockoutDraw.drawnAt).toLocaleString()}` : ''}.</p><div className="mt-4 flex justify-center gap-2"><button onClick={onDraw} className="rounded-md bg-pl-blue px-3 py-2 text-xs font-bold uppercase text-white hover:bg-pl-blue-accent">Re-draw bracket</button><button onClick={onReset} className="rounded-md bg-red-100 px-3 py-2 text-xs font-bold uppercase text-red-700 hover:bg-red-200">Reset to pending</button></div></> : <><p className="font-display text-2xl text-gray-800">Knockout draw pending</p><p className="mt-2 text-xs text-gray-500">Run the official draw after league qualification is finalized.</p><button onClick={onDraw} className="mt-4 inline-flex items-center gap-2 rounded-md bg-pl-blue px-4 py-2 text-xs font-bold uppercase text-white hover:bg-pl-blue-accent"><Shuffle className="h-4 w-4" /> Conduct knockout draw</button></>}</div></section>;
 }
 
 function MatchManager({ matches, teams, players, onUpdate, onAdd, onRemove }: { matches: ReturnType<typeof useTournament>['matches']; teams: ReturnType<typeof useTournament>['teams']; players: ReturnType<typeof useTournament>['players']; onUpdate: (id: string, updates: Parameters<ReturnType<typeof useTournament>['updateMatch']>[1]) => void; onAdd: ReturnType<typeof useTournament>['addMatch']; onRemove: ReturnType<typeof useTournament>['removeMatch'] }) {

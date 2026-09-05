@@ -500,6 +500,10 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
 
   // Autonomous Knockout Random Draw function
   const conductKnockoutDraw = (captainName: string) => {
+    if (portalRole !== 'super_admin') {
+      setAuthError('Only the super admin can conduct the knockout draw.');
+      return;
+    }
     // Current standings determine playoff contenders (ranks 3 to 6) and direct qualifiers (ranks 1 & 2)
     const seed1 = standings[0]?.team || TEAMS[0];
     const seed2 = standings[1]?.team || TEAMS[1];
@@ -585,6 +589,10 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const resetKnockoutDraw = () => {
+    if (portalRole !== 'super_admin') {
+      setAuthError('Only the super admin can reset the knockout draw.');
+      return;
+    }
     saveKnockout({ isDrawn: false });
   };
 
