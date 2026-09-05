@@ -90,6 +90,7 @@ create policy "Allow public read profiles" on profiles for select using (true);
 create policy "Allow public read players" on players for select using (true);
 create policy "Allow public read matches" on matches for select using (true);
 create policy "Allow public read highlights" on highlights for select using (approval_status = 'approved');
+create policy "Allow authors to read own highlights" on highlights for select using (created_by = auth.uid());
 
 -- Captain write policies
 -- 1. Captains can edit players only in their own team

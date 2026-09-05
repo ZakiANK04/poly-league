@@ -2,10 +2,8 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import confetti from 'canvas-confetti';
 import {
   Shield,
-  Calendar,
   Plus,
   Trash2,
   Edit3,
@@ -25,24 +23,19 @@ export default function CaptainPortalPage() {
     teams,
     matches,
     players,
-    standings,
     currentCaptain,
     portalRole,
     authLoading,
     authError,
     knockoutDraw,
     logout,
-    updateMatch,
     addPlayer,
     removePlayer,
-    conductKnockoutDraw,
-    conductLeagueDraw,
     highlights,
     addHighlight,
     updateHighlight,
     removeHighlight,
     uploadHighlightMedia,
-    resetKnockoutDraw,
   } = useTournament();
 
   const [activeTab, setActiveTab] = useState<'squad' | 'matches' | 'draw' | 'news'>('squad');
@@ -54,8 +47,6 @@ export default function CaptainPortalPage() {
   const [squadSuccess, setSquadSuccess] = useState(false);
 
   // Knockout draw state
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [leagueDrawComplete, setLeagueDrawComplete] = useState(false);
   const [highlightType, setHighlightType] = useState<'score' | 'article' | 'video'>('article');
   const [highlightTitle, setHighlightTitle] = useState('');
   const [highlightDescription, setHighlightDescription] = useState('');
@@ -63,7 +54,6 @@ export default function CaptainPortalPage() {
   const [highlightMediaFile, setHighlightMediaFile] = useState<File | null>(null);
   const [highlightScoreline, setHighlightScoreline] = useState('');
   const [editingHighlightId, setEditingHighlightId] = useState<string | null>(null);
-  const canRunLeagueDraw = portalRole === 'super_admin';
 
   if (authLoading) {
     return <div className="min-h-[60vh] flex items-center justify-center text-pl-blue font-display text-2xl uppercase tracking-wider">Verifying captain access...</div>;
@@ -128,32 +118,6 @@ export default function CaptainPortalPage() {
     setTimeout(() => setSquadSuccess(false), 2500);
   };
 
-  const handleTriggerDraw = () => {
-    setIsDrawing(true);
-    setTimeout(() => {
-      conductKnockoutDraw(currentCaptain.name);
-      setIsDrawing(false);
-      try {
-        confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { y: 0.6 },
-        });
-      } catch {}
-    }, 2000);
-  };
-
-  const handleLeagueDraw = () => {
-    setIsDrawing(true);
-    setTimeout(() => {
-      conductLeagueDraw(currentCaptain.name);
-      setLeagueDrawComplete(true);
-      setIsDrawing(false);
-      try {
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-      } catch {}
-    }, 1200);
-  };
 
   const resetHighlightForm = () => {
     setEditingHighlightId(null);
@@ -270,14 +234,6 @@ export default function CaptainPortalPage() {
           {knockoutDraw.isDrawn && (
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
           )}
-        </button>
-        <button
-          onClick={() => setActiveTab('draw')}
-          className="shrink-0 pb-3 px-3 sm:px-4 font-display text-sm sm:text-base uppercase tracking-wide border-b-2 border-transparent text-gray-400 hover:text-gray-900 transition flex items-center gap-2"
-        >
-          <Calendar className="w-4 h-4 text-pl-blue" />
-          <span>League Draw</span>
-          {matches.some((match) => match.phase === 'league') && <span className="w-2 h-2 rounded-full bg-emerald-500" />}
         </button>
       </div>
 
@@ -407,145 +363,32 @@ export default function CaptainPortalPage() {
       {activeTab === 'matches' && (
         <div className="space-y-6">
           <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl text-xs text-amber-900 leading-relaxed">
-            <strong>Autonomous Fixture Management:</strong> As captain, you can change the scheduled date, time, and venue, and record live or final scores for any fixture involving {myTeam.code}.
+            <strong>Match schedule is read-only:</strong> The super admin configures the externally determined league draw, matchday timing, venues, and scores. You can view the fixtures involving {myTeam.code} here.
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {myMatches.map((m) => (
-              <MatchEditorCard key={m.id} match={m} onUpdate={(updates) => updateMatch(m.id, updates)} canEditScore={false} />
+              <MatchEditorCard key={m.id} match={m} onUpdate={() => undefined} canEditScore={false} readOnly />
             ))}
           </div>
         </div>
       )}
 
-      {/* TAB 3: OFFICIAL KNOCKOUT DRAW CEREMONY */}
+      {/* TAB 3: READ-ONLY KNOCKOUT DRAW */}
       {activeTab === 'draw' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-md border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-            <div>
-              <div className="flex items-center gap-2 text-pl-blue text-xs font-bold uppercase tracking-wider">
-                <Calendar className="w-4 h-4" />
-                League Phase Draw
-              </div>
-              <h2 className="font-display text-3xl uppercase italic mt-2">4 Matchdays. 32 Fixtures.</h2>
-              <p className="text-xs text-gray-600 mt-1 max-w-xl leading-relaxed">Create the official four-round league schedule. Captains can then set each match&apos;s date, time, venue, and result from the schedule tab.</p>
-            </div>
-            <button onClick={handleLeagueDraw} disabled={isDrawing || !canRunLeagueDraw} className="shrink-0 bg-pl-blue hover:bg-pl-blue-accent disabled:opacity-50 text-white font-display text-lg uppercase px-6 py-3 rounded-xl shadow transition flex items-center gap-2" title={!canRunLeagueDraw ? 'Only the super admin can run the draw' : undefined}>
-              <Shuffle className={isDrawing ? 'w-5 h-5 animate-spin' : 'w-5 h-5'} />
-              {isDrawing ? 'Drawing...' : matches.some((match) => match.phase === 'league') ? 'Redraw League' : 'Run League Draw'}
-            </button>
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-md sm:p-8">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-pl-blue"><Shuffle className="h-4 w-4" /> Official tournament draws</div>
+            <h2 className="mt-2 font-display text-3xl">Draws &amp; matchups</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">League fixtures are determined on the separate official draw website. The super admin publishes the confirmed matchdays here. Captains have read-only access to the published league schedule and knockout bracket.</p>
           </div>
-          {leagueDrawComplete && <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 text-xs font-bold">League draw published. Open Schedule &amp; Match Scores to set venue and timing.</div>}
-          <div className="bg-gradient-to-r from-pl-blue to-pl-blue-accent text-white p-6 sm:p-8 rounded-2xl shadow-xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-diagonal-pattern opacity-20 pointer-events-none" />
-            <div className="relative z-10 space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
-                <Shuffle className="w-4 h-4" />
-                <span>Captains Autonomous Draw Ceremony</span>
-              </div>
-              <h2 className="font-display text-3xl sm:text-4xl uppercase italic tracking-wider">
-                RANDOMIZED KNOCKOUT DRAW
-              </h2>
-              <p className="text-white/85 text-xs sm:text-sm leading-relaxed">
-                As per tournament rules, seeds 1 and 2 advance directly to the Semi-Finals. The 4 departments finishing 3rd to 6th in the League Standings enter a live randomized draw to establish the Play-off brackets.
-              </p>
-            </div>
-          </div>
-
-          {/* Current Standings Qualification Preview */}
-          <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-200 space-y-4">
-            <h3 className="font-display text-xl text-pl-black uppercase">
-              Current League Qualification Standings
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="p-3 bg-green-50 rounded-xl border border-green-200">
-                <span className="text-[10px] font-bold text-green-700 uppercase block">Seed #1 (Direct SF)</span>
-                <span className="font-display text-lg text-gray-900 block mt-1">{standings[0]?.team.code || 'TBD'}</span>
-                <span className="text-gray-500 font-medium">{standings[0]?.points ?? 0} PTS</span>
-              </div>
-              <div className="p-3 bg-green-50 rounded-xl border border-green-200">
-                <span className="text-[10px] font-bold text-green-700 uppercase block">Seed #2 (Direct SF)</span>
-                <span className="font-display text-lg text-gray-900 block mt-1">{standings[1]?.team.code || 'TBD'}</span>
-                <span className="text-gray-500 font-medium">{standings[1]?.points ?? 0} PTS</span>
-              </div>
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 col-span-2">
-                <span className="text-[10px] font-bold text-amber-700 uppercase block">Playoff Pool (Ranks 3rd - 6th)</span>
-                <div className="flex items-center gap-3 mt-1 font-display text-lg text-gray-900">
-                  <span>{standings[2]?.team.code || '3rd'}</span>
-                  <span>•</span>
-                  <span>{standings[3]?.team.code || '4th'}</span>
-                  <span>•</span>
-                  <span>{standings[4]?.team.code || '5th'}</span>
-                  <span>•</span>
-                  <span>{standings[5]?.team.code || '6th'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Draw Execution Card */}
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-md border border-gray-200 text-center space-y-6">
-            {!knockoutDraw.isDrawn ? (
-              <div className="space-y-4 max-w-md mx-auto">
-                <p className="text-xs text-gray-600 leading-relaxed font-normal">
-                  Click the button below to execute the live randomized draw. Framer Motion will shuffle the qualified teams and lock the Play-off pairings and Semi-Final ladders into the public website.
-                </p>
-
-                <button
-                  onClick={handleTriggerDraw}
-                  disabled={isDrawing}
-                  className="bg-amber-400 hover:bg-amber-300 text-pl-black font-display text-xl uppercase px-8 py-3.5 rounded-xl font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2.5 mx-auto disabled:opacity-50"
-                >
-                  <Shuffle className={`w-5 h-5 ${isDrawing ? 'animate-spin' : ''}`} />
-                  <span>{isDrawing ? 'Shuffling Qualified Teams...' : 'Conduct Official Knockout Draw'}</span>
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="bg-emerald-50 text-emerald-900 p-4 rounded-xl border border-emerald-300 max-w-lg mx-auto">
-                  <span className="font-display text-xl uppercase block">Draw Successfully Completed & Published!</span>
-                  <p className="text-xs text-emerald-800 mt-1">
-                    Drawn by Captain <strong>{knockoutDraw.drawnBy}</strong> on {new Date(knockoutDraw.drawnAt!).toLocaleString()}. The public bracket at <code className="bg-emerald-100 px-1 py-0.5 rounded">/bracket</code> is now updated.
-                  </p>
-                </div>
-
-                {/* Display Drawn Fixtures */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left max-w-3xl mx-auto text-xs">
-                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2">
-                    <span className="font-display text-base text-pl-blue uppercase block">Play-off 1 Matchup</span>
-                    <div className="flex items-center justify-between font-display text-lg">
-                      <span>{knockoutDraw.playOff1?.home.code}</span>
-                      <span className="text-pl-blue-accent">VS</span>
-                      <span>{knockoutDraw.playOff1?.away.code}</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2">
-                    <span className="font-display text-base text-pl-blue uppercase block">Play-off 2 Matchup</span>
-                    <div className="flex items-center justify-between font-display text-lg">
-                      <span>{knockoutDraw.playOff2?.home.code}</span>
-                      <span className="text-pl-blue-accent">VS</span>
-                      <span>{knockoutDraw.playOff2?.away.code}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex justify-center gap-3">
-                  <button
-                    onClick={handleTriggerDraw}
-                    className="text-xs bg-pl-blue text-white px-4 py-2 rounded-xl font-bold hover:bg-pl-blue-accent transition"
-                  >
-                    Re-draw / Shuffle Again
-                  </button>
-                  <button
-                    onClick={resetKnockoutDraw}
-                    className="text-xs bg-red-100 text-red-700 px-4 py-2 rounded-xl font-bold hover:bg-red-200 transition"
-                  >
-                    Reset Draw to Pending
-                  </button>
-                </div>
-              </div>
-            )}
+          <div className="rounded-2xl bg-gradient-to-r from-pl-blue to-pl-blue-accent p-6 text-white shadow-xl sm:p-8">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-300"><Shuffle className="h-4 w-4" /> Knockout draw</div>
+            {knockoutDraw.isDrawn ? <>
+              <h2 className="mt-2 font-display text-3xl">Official knockout bracket published</h2>
+              <p className="mt-2 text-sm text-white/80">Drawn by {knockoutDraw.drawnBy || 'the super admin'} on {knockoutDraw.drawnAt ? new Date(knockoutDraw.drawnAt).toLocaleString() : 'the official draw date'}.</p>
+              <div className="mt-6 grid gap-3 text-left sm:grid-cols-2"><div className="rounded-xl bg-white/10 p-4"><span className="text-xs font-bold uppercase text-amber-300">Play-off 1</span><div className="mt-2 flex justify-between font-display text-xl"><span>{knockoutDraw.playOff1?.home.code}</span><span>vs</span><span>{knockoutDraw.playOff1?.away.code}</span></div></div><div className="rounded-xl bg-white/10 p-4"><span className="text-xs font-bold uppercase text-amber-300">Play-off 2</span><div className="mt-2 flex justify-between font-display text-xl"><span>{knockoutDraw.playOff2?.home.code}</span><span>vs</span><span>{knockoutDraw.playOff2?.away.code}</span></div></div></div>
+            </> : <><h2 className="mt-2 font-display text-3xl">Knockout draw pending</h2><p className="mt-2 text-sm text-white/80">The super admin will publish the knockout matchups when the league phase is complete.</p></>}
           </div>
         </div>
       )}
@@ -599,10 +442,12 @@ function MatchEditorCard({
   match,
   onUpdate,
   canEditScore,
+  readOnly = false,
 }: {
   match: Match;
   onUpdate: (updates: Partial<Match>) => void;
   canEditScore: boolean;
+  readOnly?: boolean;
 }) {
   const [homeScore, setHomeScore] = useState<number>(match.homeScore ?? 0);
   const [awayScore, setAwayScore] = useState<number>(match.awayScore ?? 0);
@@ -687,17 +532,17 @@ function MatchEditorCard({
         </div>
         <div>
           <label className="block text-gray-500 font-bold mb-1">Venue</label>
-          <input
+          {readOnly ? <div className="w-full px-2 py-2 border rounded-lg bg-gray-50 font-semibold text-gray-600">{match.venue || 'Venue to be confirmed'}</div> : <input
             type="text"
             value={venue}
             onChange={(e) => setVenue(e.target.value)}
             placeholder="Leave blank to remove venue"
             className="w-full px-2 py-2 border rounded-lg font-semibold"
-          />
+          />}
         </div>
       </div>
 
-      <button
+      {!readOnly && <button
         onClick={handleSave}
         className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition ${
           saved
@@ -707,7 +552,7 @@ function MatchEditorCard({
       >
         {saved ? <Check className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
         <span>{saved ? 'Changes Saved!' : 'Save Match Updates'}</span>
-      </button>
+      </button>}
     </div>
   );
 }

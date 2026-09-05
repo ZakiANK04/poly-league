@@ -35,6 +35,9 @@ drop policy if exists "Allow public read highlights" on public.highlights;
 drop policy if exists "Allow public read approved highlights" on public.highlights;
 create policy "Allow public read approved highlights" on public.highlights
   for select using (approval_status = 'approved');
+drop policy if exists "Allow authors to read own highlights" on public.highlights;
+create policy "Allow authors to read own highlights" on public.highlights
+  for select using (created_by = auth.uid());
 drop policy if exists "Allow super admins to read all highlights" on public.highlights;
 create policy "Allow super admins to read all highlights" on public.highlights
   for select using (public.is_super_admin());

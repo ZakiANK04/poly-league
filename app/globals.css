@@ -63,7 +63,7 @@ h1, h2, h3, h4, h5, h6 { line-height: 1.08; }
 @keyframes intro-ring { from { opacity: .15; transform: rotate(0) scale(.55); } 55% { opacity: 1; transform: rotate(125deg) scale(1); } to { opacity: 0; transform: rotate(210deg) scale(1.35); } }
 @keyframes intro-line { from { opacity: 0; transform: translateX(-50%) translateY(-50%) scaleY(0); } 35%, 70% { opacity: 1; transform: translateX(-50%) translateY(-50%) scaleY(1); } to { opacity: 0; transform: translateX(-50%) translateY(-50%) scaleY(1); } }
 @keyframes intro-flash { 0%, 12% { opacity: .28; } 22%, 100% { opacity: 0; } }
-.intro-reveal { animation: intro-wipe .72s cubic-bezier(.76, 0, .24, 1) forwards; }
+.intro-reveal { animation: intro-wipe 1.72s cubic-bezier(.76, 0, .24, 1) forwards; }
 .intro-reveal-mark { animation: intro-mark-in .38s cubic-bezier(.17,.67,.3,1.35) .08s both; }
 .intro-ball-ring { animation: intro-ring .55s ease-out .02s both; }
 .intro-pitch-line { animation: intro-line .55s ease-out .02s both; }

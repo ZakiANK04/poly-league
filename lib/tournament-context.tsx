@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Team, Match, Player, StandingRow, TeamCode, KnockoutDrawState, HighlightItem, MatchScorer, MatchPeriod } from './types';
-import { HIGHLIGHTS, TEAMS } from './mock-data';
+import { TEAMS } from './mock-data';
 import { calculateStandings } from './standings';
 import { createClient } from './supabase/client';
 
@@ -42,7 +42,6 @@ interface TournamentContextType {
   removeHighlight: (highlightId: string) => void;
   uploadHighlightMedia: (file: File) => Promise<string | null>;
   conductKnockoutDraw: (captainName: string) => void;
-  conductLeagueDraw: (captainName: string) => void;
   resetKnockoutDraw: () => void;
 }
 
@@ -293,6 +292,10 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const updateMatch = async (matchId: string, updates: Partial<Match>) => {
+    if (portalRole !== 'super_admin') {
+      setAuthError('Only the super admin can configure league matches and scores.');
+      return;
+    }
     const updated = matches.map((m) => {
       if (m.id === matchId) {
         const permittedUpdates = { ...updates };
@@ -330,6 +333,10 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const addMatch = async (matchData: Omit<Match, 'id'>) => {
+    if (portalRole !== 'super_admin') {
+      setAuthError('Only the super admin can create matches.');
+      return;
+    }
     const supabase = createClient();
     if (supabase) {
       const { data, error } = await supabase.from('matches').insert(matchPayload(matchData)).select('*').single();
@@ -342,6 +349,10 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const removeMatch = async (matchId: string) => {
+    if (portalRole !== 'super_admin') {
+      setAuthError('Only the super admin can delete matches.');
+      return;
+    }
     const supabase = createClient();
     if (supabase) {
       const { error } = await supabase.from('matches').delete().eq('id', matchId);
@@ -406,6 +417,10 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const addApprovedHighlight = async (highlight: Omit<HighlightItem, 'id'>) => {
+    if (portalRole !== 'super_admin') {
+      setAuthError('Only the super admin can publish highlights directly.');
+      return;
+    }
     const supabase = createClient();
     if (supabase) {
       const { data, error } = await supabase.from('highlights').insert({ ...highlightPayload(highlight, 'approved'), created_by: currentCaptain?.userId || null }).select('*').single();
@@ -417,6 +432,12 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const updateHighlight = async (highlightId: string, updates: Partial<HighlightItem>) => {
+    const currentHighlight = highlights.find((highlight) => highlight.id === highlightId);
+    const canEdit = portalRole === 'super_admin' || (currentHighlight?.createdBy === currentCaptain?.userId && currentHighlight?.approvalStatus === 'pending');
+    if (!canEdit) {
+      setAuthError('This highlight is read-only for your account.');
+      return;
+    }
     const supabase = createClient();
     if (supabase) {
       const current = highlights.find((highlight) => highlight.id === highlightId);
@@ -432,6 +453,10 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const removeHighlight = async (highlightId: string) => {
+    if (portalRole !== 'super_admin') {
+      setAuthError('Only the super admin can remove published highlights.');
+      return;
+    }
     const supabase = createClient();
     if (supabase) {
       const { error } = await supabase.from('highlights').delete().eq('id', highlightId);
@@ -467,15 +492,11 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const standings = calculateStandings(teams, matches);
-  const publishedDatabaseHighlights = highlights.filter((highlight) => {
+  const publishedHighlights = highlights.filter((highlight) => {
     const title = highlight.title.trim().toLowerCase();
     const placeholder = title === 'games draw soon' || title === 'a new format. a bigger fight.';
     return (highlight.approvalStatus || 'approved') === 'approved' && !placeholder;
   });
-  const archiveHighlights = HIGHLIGHTS.filter((highlight) => ['hl-indus-malik', 'hl-data-zaki', 'hl-eln-mouici'].includes(highlight.id))
-    .filter((highlight) => !publishedDatabaseHighlights.some((databaseHighlight) => databaseHighlight.mediaUrl === highlight.mediaUrl || databaseHighlight.title === highlight.title))
-    .map((highlight) => ({ ...highlight, approvalStatus: 'approved' as const }));
-  const publishedHighlights = [...publishedDatabaseHighlights, ...archiveHighlights].slice(0, 3);
 
   // Autonomous Knockout Random Draw function
   const conductKnockoutDraw = (captainName: string) => {
@@ -567,42 +588,6 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     saveKnockout({ isDrawn: false });
   };
 
-  const conductLeagueDraw = (captainName: string) => {
-    const shuffledTeams = [...teams].sort(() => Math.random() - 0.5);
-    const drawnMatches: Match[] = [];
-    const rotation = [...shuffledTeams];
-
-    for (let matchday = 1; matchday <= 4; matchday += 1) {
-      for (let pairing = 0; pairing < rotation.length / 2; pairing += 1) {
-        const homeTeam = rotation[pairing];
-        const awayTeam = rotation[rotation.length - 1 - pairing];
-        drawnMatches.push({
-          id: `league-md${matchday}-${pairing + 1}`,
-          phase: 'league',
-          matchday,
-          roundLabel: `Matchday ${matchday}`,
-          homeTeamId: homeTeam.id,
-          awayTeamId: awayTeam.id,
-          homeTeam,
-          awayTeam,
-          scheduledAt: '',
-          venue: '',
-          homeScore: null,
-          awayScore: null,
-          status: 'scheduled',
-          lastUpdatedBy: captainName,
-        });
-      }
-
-      const fixedTeam = rotation[0];
-      const rotatingTeams = rotation.slice(1);
-      rotatingTeams.unshift(rotatingTeams.pop()!);
-      rotation.splice(0, rotation.length, fixedTeam, ...rotatingTeams);
-    }
-
-    saveMatches(drawnMatches);
-  };
-
   return (
     <TournamentContext.Provider
       value={{
@@ -631,7 +616,6 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
         removeHighlight,
         uploadHighlightMedia,
         conductKnockoutDraw,
-        conductLeagueDraw,
         resetKnockoutDraw,
       }}
     >

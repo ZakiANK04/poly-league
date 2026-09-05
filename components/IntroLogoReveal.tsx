@@ -11,7 +11,7 @@ export default function IntroLogoReveal() {
       return;
     }
     window.sessionStorage.setItem('poly-league-intro-seen', 'true');
-    const timer = window.setTimeout(() => setVisible(false), 720);
+    const timer = window.setTimeout(() => setVisible(false), 1720);
     return () => window.clearTimeout(timer);
   }, []);
   if (!visible) return null;
