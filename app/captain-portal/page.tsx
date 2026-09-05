@@ -10,7 +10,6 @@ import {
   Trash2,
   Edit3,
   Check,
-  RefreshCw,
   LogOut,
   Shuffle,
   Trophy,
@@ -43,7 +42,6 @@ export default function CaptainPortalPage() {
     updateHighlight,
     removeHighlight,
     resetKnockoutDraw,
-    resetToDefaults,
   } = useTournament();
 
   const [activeTab, setActiveTab] = useState<'squad' | 'matches' | 'draw' | 'news'>('squad');
@@ -63,6 +61,7 @@ export default function CaptainPortalPage() {
   const [highlightMediaUrl, setHighlightMediaUrl] = useState('');
   const [highlightScoreline, setHighlightScoreline] = useState('');
   const [editingHighlightId, setEditingHighlightId] = useState<string | null>(null);
+  const canRunLeagueDraw = portalRole === 'super_admin';
 
   if (authLoading) {
     return <div className="min-h-[60vh] flex items-center justify-center text-pl-blue font-display text-2xl uppercase tracking-wider">Verifying captain access...</div>;
@@ -213,14 +212,6 @@ export default function CaptainPortalPage() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 self-stretch sm:self-auto">
-          <button
-            onClick={resetToDefaults}
-            title="Reset to default initial state"
-            className="flex-1 sm:flex-none justify-center items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Reset Demo</span>
-          </button>
           <button
             onClick={logout}
             className="flex-1 sm:flex-none justify-center items-center gap-1.5 text-xs bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl shadow active:scale-95 transition"
@@ -433,7 +424,7 @@ export default function CaptainPortalPage() {
               <h2 className="font-display text-3xl uppercase italic mt-2">4 Matchdays. 32 Fixtures.</h2>
               <p className="text-xs text-gray-600 mt-1 max-w-xl leading-relaxed">Create the official four-round league schedule. Captains can then set each match&apos;s date, time, venue, and result from the schedule tab.</p>
             </div>
-            <button onClick={handleLeagueDraw} disabled={isDrawing} className="shrink-0 bg-pl-blue hover:bg-pl-blue-accent disabled:opacity-50 text-white font-display text-lg uppercase px-6 py-3 rounded-xl shadow transition flex items-center gap-2">
+            <button onClick={handleLeagueDraw} disabled={isDrawing || !canRunLeagueDraw} className="shrink-0 bg-pl-blue hover:bg-pl-blue-accent disabled:opacity-50 text-white font-display text-lg uppercase px-6 py-3 rounded-xl shadow transition flex items-center gap-2" title={!canRunLeagueDraw ? 'Only the super admin can run the draw' : undefined}>
               <Shuffle className={isDrawing ? 'w-5 h-5 animate-spin' : 'w-5 h-5'} />
               {isDrawing ? 'Drawing...' : matches.some((match) => match.phase === 'league') ? 'Redraw League' : 'Run League Draw'}
             </button>

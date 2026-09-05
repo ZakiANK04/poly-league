@@ -58,19 +58,19 @@ export default function HeroBanner() {
             <div className="flex flex-wrap items-center gap-2 pt-2">
               <Link
                 href="/standings"
-                className="bg-white text-pl-blue hover:bg-amber-300 hover:text-pl-black font-display text-base tracking-wider uppercase px-4 py-2 rounded-md font-bold shadow-lg transition-all active:scale-95"
+                className="inline-flex min-h-11 items-center justify-center bg-white px-4 py-2 font-display text-base font-bold uppercase tracking-wider text-pl-blue shadow-lg transition-all hover:bg-amber-300 hover:text-pl-black active:scale-95 rounded-md"
               >
                 View Standings
               </Link>
               <Link
                 href="/fixtures"
-                className="bg-pl-blue-accent/90 hover:bg-pl-blue-accent text-white border border-white/20 font-display text-base tracking-wider uppercase px-4 py-2 rounded-md font-bold shadow-lg transition-all active:scale-95"
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-white/20 bg-pl-blue-accent/90 px-4 py-2 font-display text-base font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:bg-pl-blue-accent active:scale-95"
               >
                 All Fixtures
               </Link>
               <Link
                 href="/bracket"
-                className="badge-gold text-pl-black hover:opacity-95 text-base uppercase px-4 py-2 rounded-md font-bold shadow-lg transition-all active:scale-95 flex items-center gap-1.5"
+                className="badge-gold inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md px-4 py-2 text-base uppercase text-pl-black shadow-lg transition-all hover:opacity-95 active:scale-95"
               >
                 <span>Finals Bracket</span>
                 <ArrowRight className="w-4 h-4" />

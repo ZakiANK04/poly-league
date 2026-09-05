@@ -8,6 +8,7 @@ import { Trophy, Calendar, Users, ArrowRight, CircleHelp, Smartphone, Sparkles }
 import HeroBanner from '@/components/HeroBanner';
 import StandingsTable from '@/components/StandingsTable';
 import FixtureCard from '@/components/FixtureCard';
+import HighlightsCarousel from '@/components/HighlightsCarousel';
 import { useTournament } from '@/lib/tournament-context';
 
 export default function HomePage() {
@@ -22,6 +23,8 @@ export default function HomePage() {
       <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div className="section-rule"><div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-pl-blue-accent"><Trophy className="h-4 w-4" /> Phase 1 · UCL league standings</div><h2 className="mt-1 font-display text-3xl text-pl-black sm:text-4xl">Live tournament table</h2></div><Link href="/standings" className="inline-flex min-h-11 items-center gap-1 text-xs font-bold uppercase tracking-wider text-pl-blue-accent hover:text-pl-blue">Detailed standings & stats <ArrowRight className="h-4 w-4" /></Link></div>
       <StandingsTable compact />
     </section>
+
+    <HighlightsCarousel />
 
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div className="section-rule"><div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-pl-blue-accent"><Calendar className="h-4 w-4" /> Matchday action</div><h2 className="mt-1 font-display text-3xl text-pl-black sm:text-4xl">Next under the lights</h2></div><Link href="/fixtures" className="inline-flex min-h-11 items-center gap-1 text-xs font-bold uppercase tracking-wider text-pl-blue-accent hover:text-pl-blue">Full schedule <ArrowRight className="h-4 w-4" /></Link></div>

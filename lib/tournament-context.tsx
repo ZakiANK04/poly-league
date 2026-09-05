@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Team, Match, Player, StandingRow, TeamCode, KnockoutDrawState, HighlightItem, MatchScorer, MatchPeriod } from './types';
-import { TEAMS, INITIAL_MATCHES, INITIAL_PLAYERS } from './mock-data';
+import { HIGHLIGHTS, TEAMS } from './mock-data';
 import { calculateStandings } from './standings';
 import { createClient } from './supabase/client';
 
@@ -26,9 +26,9 @@ interface TournamentContextType {
   currentCaptain: CaptainSession | null;
   portalRole: PortalRole | null;
   authLoading: boolean;
+  dataLoading: boolean;
   authError: string | null;
   knockoutDraw: KnockoutDrawState;
-  loginAsCaptain: (teamCode: TeamCode) => void;
   logout: () => void;
   updateMatch: (matchId: string, updates: Partial<Match>) => void;
   addMatch: (match: Omit<Match, 'id'>) => void;
@@ -43,15 +43,9 @@ interface TournamentContextType {
   conductKnockoutDraw: (captainName: string) => void;
   conductLeagueDraw: (captainName: string) => void;
   resetKnockoutDraw: () => void;
-  resetToDefaults: () => void;
 }
 
 const TournamentContext = createContext<TournamentContextType | undefined>(undefined);
-
-const STORAGE_KEY_MATCHES = 'pl_matches_v2';
-const STORAGE_KEY_PLAYERS = 'pl_players_v2';
-const STORAGE_KEY_HIGHLIGHTS = 'pl_highlights_v1';
-const STORAGE_KEY_KNOCKOUT = 'pl_knockout_v2';
 
 const toHighlight = (row: Record<string, unknown>): HighlightItem => ({
   id: String(row.id),
@@ -140,57 +134,48 @@ const upsertById = <T extends { id: string }>(items: T[], next: T) => {
 
 export function TournamentProvider({ children }: { children: React.ReactNode }) {
   const [teams, setTeams] = useState<Team[]>(TEAMS);
-  const [matches, setMatches] = useState<Match[]>(INITIAL_MATCHES);
-  const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [highlights, setHighlights] = useState<HighlightItem[]>([]);
   const [currentCaptain, setCurrentCaptain] = useState<CaptainSession | null>(null);
   const [portalRole, setPortalRole] = useState<PortalRole | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [knockoutDraw, setKnockoutDraw] = useState<KnockoutDrawState>({ isDrawn: false });
 
-  // Load from local storage
-  useEffect(() => {
-    try {
-      const savedMatches = localStorage.getItem(STORAGE_KEY_MATCHES);
-      if (savedMatches) setMatches(JSON.parse(savedMatches));
-
-      const savedPlayers = localStorage.getItem(STORAGE_KEY_PLAYERS);
-      if (savedPlayers) setPlayers(JSON.parse(savedPlayers));
-
-      const savedHighlights = localStorage.getItem(STORAGE_KEY_HIGHLIGHTS);
-      if (savedHighlights) setHighlights(JSON.parse(savedHighlights));
-
-      const savedKnockout = localStorage.getItem(STORAGE_KEY_KNOCKOUT);
-      if (savedKnockout) setKnockoutDraw(JSON.parse(savedKnockout));
-    } catch (e) {
-      console.error('Storage load error:', e);
-    }
-  }, []);
-
   useEffect(() => {
     const supabase = createClient();
-    if (!supabase) return;
+    if (!supabase) {
+      setDataLoading(false);
+      return;
+    }
 
     const hydrate = async () => {
-      const [{ data: teamRows, error: teamsError }, { data: matchRows, error: matchesError }, { data: playerRows, error: playersError }, { data: highlightRows, error: highlightsError }] = await Promise.all([
-        supabase.from('teams').select('*').order('code'),
-        supabase.from('matches').select('*').order('scheduled_at'),
-        supabase.from('players').select('*').order('team_id').order('name'),
-        supabase.from('highlights').select('*').order('created_at', { ascending: false }),
-      ]);
-      if (teamsError || matchesError || playersError || highlightsError) {
-        setAuthError(`Supabase data could not be loaded: ${teamsError?.message || matchesError?.message || playersError?.message || highlightsError?.message}`);
-        return;
+      try {
+        const [{ data: teamRows, error: teamsError }, { data: matchRows, error: matchesError }, { data: playerRows, error: playersError }, { data: highlightRows, error: highlightsError }] = await Promise.all([
+          supabase.from('teams').select('*').order('code'),
+          supabase.from('matches').select('*').order('scheduled_at'),
+          supabase.from('players').select('*').order('team_id').order('name'),
+          supabase.from('highlights').select('*').order('created_at', { ascending: false }),
+        ]);
+        if (teamsError || matchesError || playersError || highlightsError) {
+          setAuthError(`Supabase data could not be loaded: ${teamsError?.message || matchesError?.message || playersError?.message || highlightsError?.message}`);
+          return;
+        }
+        const databaseTeams = (teamRows || []).map((row: Record<string, unknown>) => {
+          const fallback = TEAMS.find((team) => team.code === row.code);
+          return fallback ? { ...fallback, id: String(row.id), name: String(row.name || fallback.name), department: String(row.department || fallback.department), badgeUrl: String(row.badge_url || fallback.badgeUrl) } : null;
+        }).filter((team): team is Team => Boolean(team));
+        if (databaseTeams.length) setTeams(databaseTeams);
+        setPlayers((playerRows || []).map((row: Record<string, unknown>) => toPlayer(row)));
+        setMatches((matchRows || []).map((row: Record<string, unknown>) => toMatch(row, databaseTeams)).filter((match): match is Match => Boolean(match)));
+        setHighlights((highlightRows || []).map((row: Record<string, unknown>) => toHighlight(row)));
+      } catch (error) {
+        setAuthError(`Supabase data could not be loaded: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
+        setDataLoading(false);
       }
-      const databaseTeams = (teamRows || []).map((row: Record<string, unknown>) => {
-        const fallback = TEAMS.find((team) => team.code === row.code);
-        return fallback ? { ...fallback, id: String(row.id), name: String(row.name || fallback.name), department: String(row.department || fallback.department), badgeUrl: String(row.badge_url || fallback.badgeUrl) } : null;
-      }).filter((team): team is Team => Boolean(team));
-      if (databaseTeams.length) setTeams(databaseTeams);
-      setPlayers((playerRows || []).map((row: Record<string, unknown>) => toPlayer(row)));
-      setMatches((matchRows || []).map((row: Record<string, unknown>) => toMatch(row, databaseTeams)).filter((match): match is Match => Boolean(match)));
-      setHighlights((highlightRows || []).map((row: Record<string, unknown>) => toHighlight(row)));
     };
     void hydrate();
   }, []);
@@ -285,43 +270,18 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
 
   const saveMatches = (newMatches: Match[]) => {
     setMatches(newMatches);
-    try {
-      localStorage.setItem(STORAGE_KEY_MATCHES, JSON.stringify(newMatches));
-    } catch {}
   };
 
   const savePlayers = (newPlayers: Player[]) => {
     setPlayers(newPlayers);
-    try {
-      localStorage.setItem(STORAGE_KEY_PLAYERS, JSON.stringify(newPlayers));
-    } catch {}
   };
 
   const saveHighlights = (newHighlights: HighlightItem[]) => {
     setHighlights(newHighlights);
-    try {
-      localStorage.setItem(STORAGE_KEY_HIGHLIGHTS, JSON.stringify(newHighlights));
-    } catch {}
   };
 
   const saveKnockout = (newDraw: KnockoutDrawState) => {
     setKnockoutDraw(newDraw);
-    try {
-      localStorage.setItem(STORAGE_KEY_KNOCKOUT, JSON.stringify(newDraw));
-    } catch {}
-  };
-
-  const loginAsCaptain = (teamCode: TeamCode) => {
-    const team = TEAMS.find((t) => t.code === teamCode);
-    if (!team) return;
-    const session: CaptainSession = {
-      userId: `local-${team.code}`,
-      role: 'captain',
-      teamCode: team.code,
-      teamId: team.id,
-      name: team.captainName,
-    };
-    setCurrentCaptain(session);
   };
 
   const logout = () => {
@@ -482,11 +442,15 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   };
 
   const standings = calculateStandings(teams, matches);
-  const publishedHighlights = highlights.filter((highlight) => {
+  const publishedDatabaseHighlights = highlights.filter((highlight) => {
     const title = highlight.title.trim().toLowerCase();
     const placeholder = title === 'games draw soon' || title === 'a new format. a bigger fight.';
     return (highlight.approvalStatus || 'approved') === 'approved' && !placeholder;
   });
+  const archiveHighlights = HIGHLIGHTS.filter((highlight) => ['hl-indus-malik', 'hl-data-zaki', 'hl-eln-mouici'].includes(highlight.id))
+    .filter((highlight) => !publishedDatabaseHighlights.some((databaseHighlight) => databaseHighlight.mediaUrl === highlight.mediaUrl || databaseHighlight.title === highlight.title))
+    .map((highlight) => ({ ...highlight, approvalStatus: 'approved' as const }));
+  const publishedHighlights = [...publishedDatabaseHighlights, ...archiveHighlights].slice(0, 3);
 
   // Autonomous Knockout Random Draw function
   const conductKnockoutDraw = (captainName: string) => {
@@ -614,19 +578,6 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     saveMatches(drawnMatches);
   };
 
-  const resetToDefaults = () => {
-    setMatches(INITIAL_MATCHES);
-    setPlayers(INITIAL_PLAYERS);
-    setHighlights([]);
-    setKnockoutDraw({ isDrawn: false });
-    try {
-      localStorage.removeItem(STORAGE_KEY_MATCHES);
-      localStorage.removeItem(STORAGE_KEY_PLAYERS);
-      localStorage.removeItem(STORAGE_KEY_HIGHLIGHTS);
-      localStorage.removeItem(STORAGE_KEY_KNOCKOUT);
-    } catch {}
-  };
-
   return (
     <TournamentContext.Provider
       value={{
@@ -639,9 +590,9 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
         currentCaptain,
         portalRole,
         authLoading,
+        dataLoading,
         authError,
         knockoutDraw,
-        loginAsCaptain,
         logout,
         updateMatch,
         addMatch,
@@ -656,7 +607,6 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
         conductKnockoutDraw,
         conductLeagueDraw,
         resetKnockoutDraw,
-        resetToDefaults,
       }}
     >
       {children}

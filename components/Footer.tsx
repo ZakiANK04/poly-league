@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Github, Instagram } from 'lucide-react';
 import { TEAMS } from '@/lib/mock-data';
 
 export default function Footer() {
@@ -70,9 +71,11 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-7 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-white/60 gap-3">
+        <div className="mt-7 flex flex-col gap-3 border-t border-white/10 pt-5 text-center text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <p>© {new Date().getFullYear()} Poly League. Organized autonomously by the 8 Department Captains.</p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-end">
+            <a href="https://www.instagram.com/poly.league/" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1.5 text-white/80 transition hover:text-amber-300" aria-label="Follow Poly League on Instagram"><Instagram className="h-4 w-4" /> Instagram</a>
+            <a href="https://github.com/ZakiANK04" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1.5 text-white/80 transition hover:text-amber-300" aria-label="Visit ZakiANK04 on GitHub"><Github className="h-4 w-4" /> GitHub</a>
             <span>Powered by Next.js & Supabase</span>
           </div>
         </div>
