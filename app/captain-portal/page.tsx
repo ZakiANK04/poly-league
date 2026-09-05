@@ -41,6 +41,7 @@ export default function CaptainPortalPage() {
     addHighlight,
     updateHighlight,
     removeHighlight,
+    uploadHighlightMedia,
     resetKnockoutDraw,
   } = useTournament();
 
@@ -59,6 +60,7 @@ export default function CaptainPortalPage() {
   const [highlightTitle, setHighlightTitle] = useState('');
   const [highlightDescription, setHighlightDescription] = useState('');
   const [highlightMediaUrl, setHighlightMediaUrl] = useState('');
+  const [highlightMediaFile, setHighlightMediaFile] = useState<File | null>(null);
   const [highlightScoreline, setHighlightScoreline] = useState('');
   const [editingHighlightId, setEditingHighlightId] = useState<string | null>(null);
   const canRunLeagueDraw = portalRole === 'super_admin';
@@ -158,17 +160,21 @@ export default function CaptainPortalPage() {
     setHighlightTitle('');
     setHighlightDescription('');
     setHighlightMediaUrl('');
+    setHighlightMediaFile(null);
     setHighlightScoreline('');
   };
 
-  const handleHighlightSubmit = (event: React.FormEvent) => {
+  const handleHighlightSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const uploadedUrl = highlightMediaFile ? await uploadHighlightMedia(highlightMediaFile) : null;
+    const mediaUrl = uploadedUrl || highlightMediaUrl.trim();
+    if ((highlightType === 'article' || highlightType === 'video') && !mediaUrl) return;
     const payload = {
       season: 'Season 2026',
       title: highlightTitle.trim(),
       description: highlightDescription.trim(),
       caption: highlightDescription.trim(),
-      mediaUrl: highlightMediaUrl.trim() || '/assets/Logo_polyleague.png',
+      mediaUrl: mediaUrl || '/assets/Logo_polyleague.png',
       mediaType: highlightType === 'video' ? 'video' as const : 'image' as const,
       contentType: highlightType,
       scoreline: highlightType === 'score' ? highlightScoreline.trim() : undefined,
@@ -563,9 +569,12 @@ export default function CaptainPortalPage() {
             {highlightType === 'score' && <label className="block text-xs font-bold text-gray-700">Scoreline
               <input required value={highlightScoreline} onChange={(event) => setHighlightScoreline(event.target.value)} className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" placeholder="AUTO 2 - 1 DATA" />
             </label>}
-            <label className="block text-xs font-bold text-gray-700">{highlightType === 'article' ? 'Photo URL' : highlightType === 'video' ? 'Video URL' : 'Image URL (optional)'}
-              <input value={highlightMediaUrl} onChange={(event) => setHighlightMediaUrl(event.target.value)} className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" placeholder="https://..." />
-            </label>
+            {highlightType !== 'score' && <><label className="block text-xs font-bold text-gray-700">{highlightType === 'article' ? 'Photo URL (optional when attaching a photo)' : 'Video link (YouTube, TikTok, or MP4)'}
+              <input value={highlightMediaUrl} onChange={(event) => setHighlightMediaUrl(event.target.value)} className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" placeholder={highlightType === 'video' ? 'https://youtube.com/... or https://tiktok.com/...' : 'https://...'} />
+            </label><label className="block text-xs font-bold text-gray-700">Attach {highlightType === 'article' ? 'a photo' : 'a video'} (optional)
+              <input type="file" accept={highlightType === 'article' ? 'image/*' : 'video/*'} onChange={(event) => setHighlightMediaFile(event.target.files?.[0] || null)} className="mt-1.5 block w-full text-xs text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-xs file:font-bold file:text-pl-blue hover:file:bg-blue-100" />
+              <span className="mt-1 block text-[10px] font-normal text-gray-500">Maximum 25 MB. Attach a file or provide a link.</span>
+            </label></>}
             <label className="block text-xs font-bold text-gray-700">{highlightType === 'article' ? 'Caption' : 'Description'}
               <textarea required value={highlightDescription} onChange={(event) => setHighlightDescription(event.target.value)} rows={4} className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm resize-y" placeholder="Tell supporters what happened..." />
             </label>

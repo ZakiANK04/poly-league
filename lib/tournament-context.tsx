@@ -40,6 +40,7 @@ interface TournamentContextType {
   addApprovedHighlight: (highlight: Omit<HighlightItem, 'id'>) => void;
   updateHighlight: (highlightId: string, updates: Partial<HighlightItem>) => void;
   removeHighlight: (highlightId: string) => void;
+  uploadHighlightMedia: (file: File) => Promise<string | null>;
   conductKnockoutDraw: (captainName: string) => void;
   conductLeagueDraw: (captainName: string) => void;
   resetKnockoutDraw: () => void;
@@ -441,6 +442,30 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     saveHighlights(highlights.filter((highlight) => highlight.id !== highlightId));
   };
 
+  const uploadHighlightMedia = async (file: File) => {
+    const supabase = createClient();
+    if (!supabase) {
+      setAuthError('Supabase is required to upload media.');
+      return null;
+    }
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      setAuthError('Please choose an image or video file.');
+      return null;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      setAuthError('Media uploads must be 25 MB or smaller.');
+      return null;
+    }
+    const extension = file.name.split('.').pop()?.toLowerCase() || 'bin';
+    const fileName = `${crypto.randomUUID()}.${extension}`;
+    const { error } = await supabase.storage.from('highlight-media').upload(fileName, file, { cacheControl: '3600', upsert: false });
+    if (error) {
+      setAuthError(`Media upload failed: ${error.message}`);
+      return null;
+    }
+    return supabase.storage.from('highlight-media').getPublicUrl(fileName).data.publicUrl;
+  };
+
   const standings = calculateStandings(teams, matches);
   const publishedDatabaseHighlights = highlights.filter((highlight) => {
     const title = highlight.title.trim().toLowerCase();
@@ -604,6 +629,7 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
         addApprovedHighlight,
         updateHighlight,
         removeHighlight,
+        uploadHighlightMedia,
         conductKnockoutDraw,
         conductLeagueDraw,
         resetKnockoutDraw,
