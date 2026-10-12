@@ -27,6 +27,24 @@ alter table public.matches add column if not exists scorers jsonb not null defau
 alter table public.matches add column if not exists assists jsonb not null default '[]'::jsonb;
 alter table public.matches add column if not exists round_label text;
 
+insert into storage.buckets (id, name, public)
+values ('highlight-media', 'highlight-media', true)
+on conflict (id) do update set public = excluded.public;
+
+drop policy if exists "Super admins can upload highlight media" on storage.objects;
+create policy "Super admins can upload highlight media" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'highlight-media' and public.is_super_admin());
+drop policy if exists "Super admins can update highlight media" on storage.objects;
+create policy "Super admins can update highlight media" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'highlight-media' and public.is_super_admin())
+  with check (bucket_id = 'highlight-media' and public.is_super_admin());
+drop policy if exists "Super admins can delete highlight media" on storage.objects;
+create policy "Super admins can delete highlight media" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'highlight-media' and public.is_super_admin());
+
 create or replace function public.is_super_admin()
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.profiles where id = auth.uid() and role = 'super_admin');

@@ -85,6 +85,27 @@ alter table players enable row level security;
 alter table matches enable row level security;
 alter table highlights enable row level security;
 
+-- Highlight media storage
+insert into storage.buckets (id, name, public)
+values ('highlight-media', 'highlight-media', true)
+on conflict (id) do update set public = excluded.public;
+
+drop policy if exists "Super admins can upload highlight media" on storage.objects;
+create policy "Super admins can upload highlight media" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'highlight-media' and exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'super_admin'));
+
+drop policy if exists "Super admins can update highlight media" on storage.objects;
+create policy "Super admins can update highlight media" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'highlight-media' and exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'super_admin'))
+  with check (bucket_id = 'highlight-media' and exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'super_admin'));
+
+drop policy if exists "Super admins can delete highlight media" on storage.objects;
+create policy "Super admins can delete highlight media" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'highlight-media' and exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'super_admin'));
+
 -- Public read policies (all users can view the tournament details)
 create policy "Allow public read teams" on teams for select using (true);
 create policy "Allow public read profiles" on profiles for select using (true);
