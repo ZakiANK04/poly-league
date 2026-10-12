@@ -37,7 +37,7 @@ interface TournamentContextType {
   updatePlayer: (playerId: string, updates: Partial<Player>) => void;
   removePlayer: (playerId: string) => void;
   addHighlight: (highlight: Omit<HighlightItem, 'id'>) => void;
-  addApprovedHighlight: (highlight: Omit<HighlightItem, 'id'>) => void;
+  addApprovedHighlight: (highlight: Omit<HighlightItem, 'id'>) => Promise<boolean>;
   updateHighlight: (highlightId: string, updates: Partial<HighlightItem>) => void;
   removeHighlight: (highlightId: string) => void;
   uploadHighlightMedia: (file: File) => Promise<string | null>;
@@ -421,16 +421,19 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   const addApprovedHighlight = async (highlight: Omit<HighlightItem, 'id'>) => {
     if (portalRole !== 'super_admin') {
       setAuthError('Only the super admin can publish highlights directly.');
-      return;
+      return false;
     }
     const supabase = createClient();
     if (supabase) {
       const { data, error } = await supabase.from('highlights').insert({ ...highlightPayload(highlight, 'approved'), created_by: currentCaptain?.userId || null }).select('*').single();
-      if (error) { setAuthError(`News publishing failed: ${error.message}`); return; }
+      if (error) { setAuthError(`News publishing failed: ${error.message}`); return false; }
       setHighlights((previous) => upsertById(previous, toHighlight(data as Record<string, unknown>)));
-      return;
+      setAuthError(null);
+      return true;
     }
     saveHighlights([{ ...highlight, id: `highlight-${Date.now()}`, approvalStatus: 'approved' }, ...highlights]);
+    setAuthError(null);
+    return true;
   };
 
   const updateHighlight = async (highlightId: string, updates: Partial<HighlightItem>) => {
