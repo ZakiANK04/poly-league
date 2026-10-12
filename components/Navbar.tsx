@@ -12,7 +12,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home' }, { href: '/standings', label: 'Standings' },
     { href: '/fixtures', label: 'Fixtures' }, { href: '/bracket', label: 'Knockout' },
-    { href: '/teams', label: 'Teams' }, { href: '/captains', label: 'Captains' },
+    { href: '/teams', label: 'Teams' }, { href: '/captains', label: 'Players' },
     { href: '/rules', label: 'Format & Rules' }, { href: '/highlights', label: 'Highlights' },
   ];
   const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href);

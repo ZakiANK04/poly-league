@@ -65,7 +65,7 @@ export default function Footer() {
               <li><Link href="/standings" className="hover:text-white hover:underline">Live League Standings</Link></li>
               <li><Link href="/fixtures" className="hover:text-white hover:underline">Matchday Fixtures</Link></li>
               <li><Link href="/bracket" className="hover:text-white hover:underline">Finals Knockout Bracket</Link></li>
-              <li><Link href="/captains" className="hover:text-white hover:underline">Captains Directory</Link></li>
+              <li><Link href="/captains" className="hover:text-white hover:underline">Players &amp; Rankings</Link></li>
               <li><Link href="/rules" className="hover:text-white hover:underline">Official Competition Rules</Link></li>
             </ul>
           </div>
