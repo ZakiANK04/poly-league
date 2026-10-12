@@ -39,6 +39,13 @@ export interface MatchScorer {
   minute?: number;
 }
 
+export interface MatchAssist {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  minute?: number;
+}
+
 export interface Match {
   id: string;
   phase: MatchPhase;
@@ -55,6 +62,7 @@ export interface Match {
   status: MatchStatus;
   matchPeriod?: MatchPeriod;
   scorers?: MatchScorer[];
+  assists?: MatchAssist[];
   lastUpdatedBy?: string;
 }
 

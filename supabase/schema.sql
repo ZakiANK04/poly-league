@@ -51,6 +51,7 @@ create table if not exists matches (
   status text check (status in ('scheduled','live','finished')) default 'scheduled',
   match_period text check (match_period in ('pre-match','first-half','second-half','full-time')) default 'pre-match',
   scorers jsonb not null default '[]'::jsonb,
+  assists jsonb not null default '[]'::jsonb,
   last_updated_by text,
   updated_at timestamptz default now(),
   created_at timestamptz default now()

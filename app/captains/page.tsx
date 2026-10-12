@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Award, ShieldCheck, Trophy, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTournament } from '@/lib/tournament-context';
-import { MatchScorer, Player, Team } from '@/lib/types';
+import { MatchAssist, MatchScorer, Player, Team } from '@/lib/types';
 
 type RankedPlayer = {
   player: Player;
@@ -52,6 +52,18 @@ export default function PlayersPage() {
   });
   const topScorers = Array.from(scorerTotals.values()).sort((a, b) => b.value - a.value || a.player.name.localeCompare(b.player.name)).slice(0, 5);
 
+  const assistTotals = new Map<string, { player: Player; team: Team; value: number }>();
+  completedMatches.forEach((match) => {
+    (match.assists || []).forEach((assist: MatchAssist) => {
+      const player = players.find((candidate) => candidate.id === assist.playerId);
+      const team = teamById.get(assist.teamId) || (player ? teamById.get(player.teamId) : undefined);
+      if (!player || !team) return;
+      const current = assistTotals.get(player.id);
+      assistTotals.set(player.id, { player, team, value: (current?.value || 0) + 1 });
+    });
+  });
+  const topAssists = Array.from(assistTotals.values()).sort((a, b) => b.value - a.value || a.player.name.localeCompare(b.player.name)).slice(0, 5);
+
   const cleanSheetTotals = new Map<string, number>();
   completedMatches.forEach((match) => {
     const homeScore = match.homeScore ?? 0;
@@ -76,10 +88,15 @@ export default function PlayersPage() {
         </div>
       </header>
 
-      <section className="grid gap-6 lg:grid-cols-2" aria-label="Player rankings">
+      <section className="grid gap-6 lg:grid-cols-3" aria-label="Player rankings">
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-md sm:p-7">
           <div className="mb-3 flex items-center gap-2 border-b border-gray-100 pb-4"><div className="rounded-lg bg-amber-100 p-2 text-amber-700"><Trophy className="h-5 w-5" /></div><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-pl-blue-accent">Official leaderboard</p><h2 className="font-display text-2xl uppercase text-pl-black">Top scorers</h2></div></div>
           {topScorers.length ? <ol>{topScorers.map((entry, index) => <RankingRow key={entry.player.id} rank={index + 1} {...entry} label={entry.value === 1 ? 'goal' : 'goals'} />)}</ol> : <RankingEmpty icon={<Trophy className="h-6 w-6" />} text="Scorer rankings will appear after the first recorded goals." />}
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-md sm:p-7">
+          <div className="mb-3 flex items-center gap-2 border-b border-gray-100 pb-4"><div className="rounded-lg bg-blue-100 p-2 text-pl-blue"><Award className="h-5 w-5" /></div><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-pl-blue-accent">Creative leaderboard</p><h2 className="font-display text-2xl uppercase text-pl-black">Assists</h2></div></div>
+          {topAssists.length ? <ol>{topAssists.map((entry, index) => <RankingRow key={entry.player.id} rank={index + 1} {...entry} label={entry.value === 1 ? 'assist' : 'assists'} />)}</ol> : <RankingEmpty icon={<Award className="h-6 w-6" />} text="Assist rankings will appear after the first recorded assists." />}
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-md sm:p-7">

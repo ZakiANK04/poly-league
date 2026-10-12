@@ -24,6 +24,7 @@ alter table public.matches add column if not exists match_period text
   check (match_period in ('pre-match', 'first-half', 'second-half', 'full-time'))
   default 'pre-match';
 alter table public.matches add column if not exists scorers jsonb not null default '[]'::jsonb;
+alter table public.matches add column if not exists assists jsonb not null default '[]'::jsonb;
 alter table public.matches add column if not exists round_label text;
 
 create or replace function public.is_super_admin()
