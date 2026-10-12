@@ -30,7 +30,7 @@ interface TournamentContextType {
   authError: string | null;
   knockoutDraw: KnockoutDrawState;
   logout: () => void;
-  updateMatch: (matchId: string, updates: Partial<Match>) => void;
+  updateMatch: (matchId: string, updates: Partial<Match>) => Promise<boolean>;
   addMatch: (match: Omit<Match, 'id'>) => void;
   removeMatch: (matchId: string) => void;
   addPlayer: (player: Omit<Player, 'id'>) => void;
@@ -296,7 +296,7 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   const updateMatch = async (matchId: string, updates: Partial<Match>) => {
     if (portalRole !== 'super_admin') {
       setAuthError('Only the super admin can configure league matches and scores.');
-      return;
+      return false;
     }
     const updated = matches.map((m) => {
       if (m.id === matchId) {
@@ -317,7 +317,7 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     const supabase = createClient();
     if (supabase) {
       const current = matches.find((match) => match.id === matchId);
-      if (!current) return;
+      if (!current) return false;
       const permittedUpdates = { ...updates };
       if (portalRole !== 'super_admin') {
         delete permittedUpdates.homeScore;
@@ -326,12 +326,15 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
         delete permittedUpdates.matchPeriod;
       }
       const { data, error } = await supabase.from('matches').update(matchPayload({ ...current, ...permittedUpdates, lastUpdatedBy: currentCaptain?.name || current.lastUpdatedBy })).eq('id', matchId).select('*').single();
-      if (error) { setAuthError(`Match update failed: ${error.message}`); return; }
+      if (error) { setAuthError(`Match update failed: ${error.message}`); return false; }
       const nextMatch = toMatch(data as Record<string, unknown>, teams);
       if (nextMatch) setMatches((previous) => previous.map((match) => match.id === matchId ? nextMatch : match));
-      return;
+      setAuthError(null);
+      return true;
     }
     saveMatches(updated);
+    setAuthError(null);
+    return true;
   };
 
   const addMatch = async (matchData: Omit<Match, 'id'>) => {
