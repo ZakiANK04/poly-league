@@ -10,6 +10,8 @@ import { Match } from '@/lib/types';
 export default function FixtureCard({ match }: { match: Match }) {
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
+  const homeScorers = (match.scorers || []).filter((scorer) => scorer.teamId === match.homeTeamId);
+  const awayScorers = (match.scorers || []).filter((scorer) => scorer.teamId === match.awayTeamId);
 
   const dateStr = new Date(match.scheduledAt).toLocaleDateString(undefined, {
     weekday: 'short',
@@ -117,6 +119,17 @@ export default function FixtureCard({ match }: { match: Match }) {
             </span>
           </div>
         </Link>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 border-t border-gray-100 bg-white px-5 py-3 text-xs">
+        <div>
+          <p className="mb-1 text-[9px] font-black uppercase tracking-[.16em] text-pl-blue">{match.homeTeam.code} scorers</p>
+          {homeScorers.length ? <ul className="space-y-1">{homeScorers.map((scorer, index) => <li key={`${scorer.playerId}-${index}`} className="flex items-center justify-between gap-2 text-gray-700"><span className="truncate font-semibold">{scorer.playerName}</span>{scorer.minute ? <span className="shrink-0 text-[10px] text-gray-400">{scorer.minute}&apos;</span> : null}</li>)}</ul> : <p className="text-[11px] text-gray-400">{isFinished || isLive ? 'No goals' : 'Not available yet'}</p>}
+        </div>
+        <div className="text-right">
+          <p className="mb-1 text-[9px] font-black uppercase tracking-[.16em] text-pl-blue">{match.awayTeam.code} scorers</p>
+          {awayScorers.length ? <ul className="space-y-1">{awayScorers.map((scorer, index) => <li key={`${scorer.playerId}-${index}`} className="flex items-center justify-end gap-2 text-gray-700"><span className="truncate font-semibold">{scorer.playerName}</span>{scorer.minute ? <span className="shrink-0 text-[10px] text-gray-400">{scorer.minute}&apos;</span> : null}</li>)}</ul> : <p className="text-[11px] text-gray-400">{isFinished || isLive ? 'No goals' : 'Not available yet'}</p>}
+        </div>
       </div>
 
       {/* Venue remains an admin fixture setting and is intentionally private. */}

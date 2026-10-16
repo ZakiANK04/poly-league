@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Team, Match, Player, StandingRow, TeamCode, KnockoutDrawState, HighlightItem, MatchScorer, MatchAssist, MatchPeriod } from './types';
+import { Team, Match, Player, StandingRow, TeamCode, KnockoutDrawState, HighlightItem, MatchScorer, MatchPeriod } from './types';
 import { TEAMS } from './mock-data';
 import { calculateStandings } from './standings';
 import { createClient } from './supabase/client';
@@ -86,7 +86,6 @@ const toMatch = (row: Record<string, unknown>, databaseTeams: Team[]): Match | n
     status: row.status === 'live' || row.status === 'finished' ? row.status : 'scheduled',
     matchPeriod: row.match_period as MatchPeriod | undefined,
     scorers: Array.isArray(row.scorers) ? row.scorers as MatchScorer[] : [],
-    assists: Array.isArray(row.assists) ? row.assists as MatchAssist[] : [],
     lastUpdatedBy: typeof row.last_updated_by === 'string' ? row.last_updated_by : undefined,
   };
 };
@@ -104,7 +103,6 @@ const matchPayload = (match: Partial<Match>) => ({
   status: match.status,
   match_period: match.matchPeriod || (match.status === 'finished' ? 'full-time' : match.status === 'live' ? 'first-half' : 'pre-match'),
   scorers: match.scorers || [],
-  assists: match.assists || [],
   last_updated_by: match.lastUpdatedBy || null,
 });
 
